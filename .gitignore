@@ -11,9 +11,6 @@
 *.sln.docstates
 *.exe
 *.txt
-Mandragora/main.cpp
-Mandragora/ext/lib/cryptopp.lib
-Mandragora/ext/lib/libboost_wave-vc143-mt-gd-x64-1_84.lib
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
