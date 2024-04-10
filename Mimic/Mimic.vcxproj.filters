@@ -54,6 +54,9 @@
     <ClCompile Include="..\dependencies\includes\InputUtilities\InputUtilities.cpp">
       <Filter>Header Files\Input</Filter>
     </ClCompile>
+    <ClCompile Include="MimicEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\includes\imgui\imgui.h">
@@ -85,6 +88,9 @@
     </ClInclude>
     <ClInclude Include="GUI.h">
       <Filter>Header Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="MimicEngine.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

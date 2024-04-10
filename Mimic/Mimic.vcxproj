@@ -145,6 +145,7 @@
     <ClCompile Include="..\dependencies\includes\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\dependencies\includes\InputUtilities\InputUtilities.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MimicEngine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\includes\imgui\imgui.h" />
@@ -157,6 +158,7 @@
     <ClInclude Include="..\dependencies\includes\imgui\imstb_truetype.h" />
     <ClInclude Include="..\dependencies\includes\InputUtilities\InputUtilities.h" />
     <ClInclude Include="GUI.h" />
+    <ClInclude Include="MimicEngine.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

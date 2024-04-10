@@ -10,6 +10,7 @@
 #include <imgui/imgui_stdlib.h>
 
 #include "GUI.h"
+#include "MimicEngine.h"
 
 #ifdef IMGUI
 int width = 1280;
@@ -57,7 +58,8 @@ int main()
 
 int main()
 {
-
+	MimicEngine m;
+	m.readFile("C:\\Users\\Deathface\\Desktop\\comands.txt");
 
 	return 0;
 }
