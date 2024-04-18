@@ -59,7 +59,8 @@ int main()
 int main()
 {
 	MimicEngine m;
-	m.readFile("C:\\Users\\Deathface\\Desktop\\comands.txt");
+	m.readFile("C:\\Users\\Deathface\\Desktop\\commands.txt");
+	m.run();
 
 	return 0;
 }

@@ -5,7 +5,6 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <queue>
 
 #include "InputUtilities/InputUtilities.h"
 
@@ -15,12 +14,14 @@ enum Command
 
 	SLEEP = 0,
 
-	LCLICKDOWN, LCLICKUP,
-	RCLICKDOWN, RCLICKUP,
-	MCLICKDOWN, MCLICKUP,
+	MOVE,
+	LCLICKDOWN, LCLICKUP, LCLICK,
+	RCLICKDOWN, RCLICKUP, RCLICK,
+	MCLICKDOWN, MCLICKUP, MCLICK,
 	MWHEELDOWN, MWHEELUP,
-	EXTRACLICKDOWN, EXTRACLICKUP,
+	EXTRACLICKDOWN, EXTRACLICKUP, EXTRACLICK,
 
+	VKEYDOWN, VKEYUP,
 	KEYDOWN, KEYUP,
 	MULTIKEYPRESSDOWN, MULTIKEYPRESSUP
 };
@@ -37,12 +38,17 @@ public:
 	//MimicEngine();
 
 	int readFile(std::string filepath);
+	void run();
 
 private:
 	Command strToCommand(std::string cmd);
 	void resetInstructions();
 
+	int processCmd(Instruction instruction);
+
 private:
-	std::queue<Instruction> m_instructions;
+	std::vector<Instruction> m_instructions;
+
+	InputUtilities inputUtils;
 };
 
