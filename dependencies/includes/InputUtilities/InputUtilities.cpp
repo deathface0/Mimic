@@ -1,71 +1,76 @@
 #include "InputUtilities.h"
 
-bool MouseUtilities::move(int x, int y)
+InputUtilitiesCore::~InputUtilitiesCore()
+{
+    reset();
+}
+
+bool InputUtilitiesCore::SetCursorPos(int x, int y)
 {
     INPUT input;
     input.type = INPUT_MOUSE;
+    input.mi.time = 0;
     input.mi.dx = x * (65536 / GetSystemMetrics(SM_CXSCREEN));
     input.mi.dy = y * (65536 / GetSystemMetrics(SM_CYSCREEN));
     input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
     return SendInput(1, &input, sizeof(INPUT));
 }
 
-bool MouseUtilities::rightClick()
+bool InputUtilitiesCore::MouseEvent(WORD m_event)
+{ 
+    INPUT input;
+    input.type = INPUT_MOUSE;
+    input.mi.dwFlags = m_event;
+
+    Event c_event{ m_event, -1, -1 };
+
+    if (m_event == MOUSEEVENTF_LEFTDOWN || m_event == MOUSEEVENTF_RIGHTDOWN || m_event == MOUSEEVENTF_MIDDLEDOWN) {
+        bool success = SendInput(1, &input, sizeof(INPUT));
+        this->runningInputs.insert({ m_event, c_event });
+
+        return success;
+    }
+    else if (m_event == MOUSEEVENTF_LEFTUP || m_event == MOUSEEVENTF_RIGHTUP || m_event == MOUSEEVENTF_MIDDLEUP) {
+        bool success = SendInput(1, &input, sizeof(INPUT));
+        this->runningInputs.erase(m_event);
+
+        return success;
+    }
+
+    return false;
+}
+
+bool InputUtilitiesCore::ExtraClickDown(int button)
 {
-    int flag = 0;
+    Event c_event{ MOUSEEVENTF_XDOWN, -1, -1 };
 
     INPUT input;
     input.type = INPUT_MOUSE;
-    input.mi.dwFlags = MOUSEEVENTF_RIGHTDOWN;
-    flag += SendInput(1, &input, sizeof(INPUT));
-    ZeroMemory(&input, sizeof(INPUT));
-    input.type = INPUT_MOUSE;
-    input.mi.dwFlags = MOUSEEVENTF_RIGHTUP;
-    flag += SendInput(1, &input, sizeof(INPUT));
+    input.mi.dx = 0;
+    input.mi.dy = 0;
+    input.mi.mouseData = XBUTTON1 + (button - 1); // Se calcula el número de botón extra en función del parámetro
+    input.mi.dwFlags = MOUSEEVENTF_XDOWN;
+    input.mi.time = 0;
+    input.mi.dwExtraInfo = 0;
 
-    return (flag == 2) ? true : false;
+    try {
+        this->runningInputs.insert({ button, c_event });
+        return SendInput(1, &input, sizeof(INPUT));
+    }
+    catch (std::exception& e)
+    {
+        return false;
+    }
 }
 
-bool MouseUtilities::leftClick()
-{
-    int flag = 0;
-
-    INPUT input;
-    input.type = INPUT_MOUSE;
-    input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-    flag += SendInput(1, &input, sizeof(INPUT));
-    ZeroMemory(&input, sizeof(INPUT));
-    input.type = INPUT_MOUSE;
-    input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
-    flag += SendInput(1, &input, sizeof(INPUT));
-
-    return (flag == 2) ? true : false;
-}
-
-bool MouseUtilities::wheelClick()
-{
-    int flag = 0;
-
-    INPUT input;
-    input.type = INPUT_MOUSE;
-    input.mi.dwFlags = MOUSEEVENTF_MIDDLEDOWN;
-    flag += SendInput(1, &input, sizeof(INPUT));
-    ZeroMemory(&input, sizeof(INPUT));
-    input.type = INPUT_MOUSE;
-    input.mi.dwFlags = MOUSEEVENTF_MIDDLEUP;
-    flag += SendInput(1, &input, sizeof(INPUT));
-
-    return (flag == 2) ? true : false;
-}
-
-bool MouseUtilities::extraClick(int button)
+bool InputUtilitiesCore::ExtraClickUp(int button)
 {
     INPUT input;
     input.type = INPUT_MOUSE;
     input.mi.dx = 0;
     input.mi.dy = 0;
     input.mi.mouseData = XBUTTON1 + (button - 1); // Se calcula el número de botón extra en función del parámetro
-    input.mi.dwFlags = MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP;
+    input.mi.dwFlags = MOUSEEVENTF_XUP;
     input.mi.time = 0;
     input.mi.dwExtraInfo = 0;
 
@@ -74,10 +79,11 @@ bool MouseUtilities::extraClick(int button)
     }
     catch (std::exception& e)
     {
+        return false;
     }
 }
 
-bool MouseUtilities::wheelRoll(int scrolls, int delta)
+bool InputUtilitiesCore::MouseWheelRoll(int scrolls, int delta)
 {
     INPUT input;
     input.type = INPUT_MOUSE;
@@ -90,6 +96,124 @@ bool MouseUtilities::wheelRoll(int scrolls, int delta)
     return SendInput(1, &input, sizeof(INPUT));
 }
 
+bool InputUtilitiesCore::vkKeyDown(WORD vkCode)
+{
+    Event c_event{ -1, vkCode, -1 };
+
+    INPUT input = { 0 };
+    input.type = INPUT_KEYBOARD;
+    input.ki.wVk = vkCode;
+    input.ki.dwFlags = 0;
+    bool success = SendInput(1, &input, sizeof(INPUT));
+
+    if (success)
+        this->runningInputs.insert({ vkCode, c_event });
+
+    return success;
+}
+
+bool InputUtilitiesCore::vkKeyUp(WORD vkCode)
+{
+    INPUT input = { 0 };
+    input.type = INPUT_KEYBOARD;
+    input.ki.wVk = vkCode;
+    input.ki.dwFlags = KEYEVENTF_KEYUP;
+    return SendInput(1, &input, sizeof(INPUT));
+}
+
+bool InputUtilitiesCore::KeyDown(char key)
+{
+    Event c_event{ -1, -1, key };
+
+    INPUT input;
+    memset(&input, 0, sizeof(INPUT));
+    input.type = INPUT_KEYBOARD;
+    input.ki.dwExtraInfo = GetMessageExtraInfo();
+    input.ki.wScan =
+        static_cast<WORD>(MapVirtualKeyEx(VkKeyScanA(key), MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+    input.ki.dwFlags = KEYEVENTF_SCANCODE;
+    bool success = SendInput(1, &input, sizeof(INPUT));
+
+    if (success)
+        this->runningInputs.insert({ key, c_event });
+
+    return success;
+}
+
+bool InputUtilitiesCore::KeyUp(char key)
+{
+    INPUT input;
+    memset(&input, 0, sizeof(INPUT));
+    input.type = INPUT_KEYBOARD;
+    input.ki.dwExtraInfo = GetMessageExtraInfo();
+    input.ki.wScan =
+        static_cast<WORD>(MapVirtualKeyEx(VkKeyScanA(key), MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+    input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+    return SendInput(1, &input, sizeof(INPUT));
+}
+
+bool InputUtilitiesCore::vkMultiKeyDown(const std::vector<WORD>& vkCodes)
+{
+    int flag = 0;
+    INPUT input;
+
+    input.type = INPUT_KEYBOARD;
+    input.ki.wScan = 0;
+    input.ki.time = 0;
+    input.ki.dwExtraInfo = 0;
+
+    for (const auto& vkCode : vkCodes) {
+        Event c_event{ -1, vkCode, -1 };
+
+        input.ki.wVk = vkCode;
+        input.ki.dwFlags = 0;
+        bool success = SendInput(1, &input, sizeof(INPUT));
+
+        if (success)
+        {
+            this->runningInputs.insert({ vkCode, c_event });
+            flag++;
+        }
+    }
+
+    return (flag == vkCodes.size()) ? true : false;
+}
+
+bool InputUtilitiesCore::vkMultiKeyUp(const std::vector<WORD>& vkCodes)
+{
+    int flag = 0;
+    INPUT input;
+
+    input.type = INPUT_KEYBOARD;
+    input.ki.wScan = 0;
+    input.ki.time = 0;
+    input.ki.dwExtraInfo = 0;
+
+    for (const auto& vkCode : vkCodes) {
+        input.ki.wVk = vkCode;
+        input.ki.dwFlags = KEYEVENTF_KEYUP;
+        flag += SendInput(1, &input, sizeof(INPUT));
+    }
+
+    return (flag == vkCodes.size()) ? true : false;
+}
+
+void InputUtilitiesCore::reset()
+{
+    for (const auto& input : runningInputs)
+    {
+        if (input.second.vk != -1) 
+            vkKeyUp(input.second.vk);
+
+        if (input.second.key != -1)
+            KeyUp(input.second.key);
+
+        if (input.second.mouse != -1)
+            MouseEvent(input.second.mouse << 1); //Bit shift left to obtain UP equivalence
+    }
+
+    this->runningInputs.clear();
+}
 
 
 
@@ -100,13 +224,43 @@ bool MouseUtilities::wheelRoll(int scrolls, int delta)
 
 
 
+bool InputUtilities::leftClick(time_t ms_hold)
+{
+    bool success = MouseEvent(MOUSEEVENTF_LEFTDOWN);
+    Sleep(ms_hold);
+    success &= MouseEvent(MOUSEEVENTF_LEFTUP);
 
+    return success;
+}
 
+bool InputUtilities::rightClick(time_t ms_hold)
+{
+    bool success = MouseEvent(MOUSEEVENTF_RIGHTDOWN);
+    Sleep(ms_hold);
+    success &= MouseEvent(MOUSEEVENTF_RIGHTUP);
 
+    return success;
+}
 
+bool InputUtilities::middleClick(time_t ms_hold)
+{
+    bool success = MouseEvent(MOUSEEVENTF_MIDDLEDOWN);
+    Sleep(ms_hold);
+    success &= MouseEvent(MOUSEEVENTF_MIDDLEUP);
 
+    return success;
+}
 
-bool KeyboardUtilities::virtualInput(WORD vkCode)
+bool InputUtilities::extraClick(int button, time_t ms_hold)
+{
+    bool success = ExtraClickDown(button);
+    Sleep(ms_hold);
+    success &= ExtraClickUp(button);
+
+    return success;
+}
+
+bool InputUtilities::vkKey(WORD vkCode)
 {
     int flag = 0;
 
@@ -121,7 +275,7 @@ bool KeyboardUtilities::virtualInput(WORD vkCode)
     return (flag == 2) ? true : false;
 }
 
-bool KeyboardUtilities::directInput(char key)
+bool InputUtilities::directKey(char key)
 {
     int flag = 0;
 
@@ -141,7 +295,7 @@ bool KeyboardUtilities::directInput(char key)
     return (flag == 2) ? true : false;
 }
 
-bool KeyboardUtilities::virtualCombinedInput(const std::vector<WORD>& vkCodes)
+bool InputUtilities::vkMultiKey(const std::vector<WORD>& vkCodes)
 {
     int flag = 0;
     INPUT input;
@@ -164,30 +318,4 @@ bool KeyboardUtilities::virtualCombinedInput(const std::vector<WORD>& vkCodes)
     }
 
     return (flag == vkCodes.size() * 2) ? true : false;
-}
-
-void KeyboardUtilities::typeStr(const char* str)
-{
-    char cChar;
-    while ((cChar = *str++)) // loops through chars
-    {
-        short vk = VkKeyScan(cChar); // keycode of char
-        if ((vk >> 8) & 1) { keybd_event(VK_LSHIFT, 0, 0, 0); } // hold shift if necessary
-        keybd_event((unsigned char)vk, 0, 0, 0); // key in
-        keybd_event((unsigned char)vk, 0, KEYEVENTF_KEYUP, 0); // key out
-        if ((vk >> 8) & 1) { keybd_event(VK_LSHIFT, 0, KEYEVENTF_KEYUP, 0); } // release shift if necessary
-    }
-}
-
-void KeyboardUtilities::typeStr(char* str)
-{
-    char cChar;
-    while ((cChar = *str++)) // loops through chars
-    {
-        short vk = VkKeyScan(cChar); // keycode of char
-        if ((vk >> 8) & 1) { keybd_event(VK_LSHIFT, 0, 0, 0); } // hold shift if necessary
-        keybd_event((unsigned char)vk, 0, 0, 0); // key in
-        keybd_event((unsigned char)vk, 0, KEYEVENTF_KEYUP, 0); // key out
-        if ((vk >> 8) & 1) { keybd_event(VK_LSHIFT, 0, KEYEVENTF_KEYUP, 0); } // release shift if necessary
-    }
 }
