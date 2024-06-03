@@ -26,13 +26,13 @@ bool InputUtilitiesCore::MouseEvent(WORD m_event)
 
     if (m_event == MOUSEEVENTF_LEFTDOWN || m_event == MOUSEEVENTF_RIGHTDOWN || m_event == MOUSEEVENTF_MIDDLEDOWN) {
         bool success = SendInput(1, &input, sizeof(INPUT));
-        this->runningInputs.insert({ m_event, c_event });
+        this->runningInputs.insert({ "m_event_" + std::to_string(m_event) , c_event});
 
         return success;
     }
     else if (m_event == MOUSEEVENTF_LEFTUP || m_event == MOUSEEVENTF_RIGHTUP || m_event == MOUSEEVENTF_MIDDLEUP) {
         bool success = SendInput(1, &input, sizeof(INPUT));
-        this->runningInputs.erase(m_event);
+        this->runningInputs.erase("m_event_" + std::to_string(m_event));
 
         return success;
     }
@@ -54,7 +54,7 @@ bool InputUtilitiesCore::ExtraClickDown(int button)
     input.mi.dwExtraInfo = 0;
 
     try {
-        this->runningInputs.insert({ button, c_event });
+        this->runningInputs.insert({ "extra_btn_" + std::to_string(button), c_event});
         return SendInput(1, &input, sizeof(INPUT));
     }
     catch (std::exception& e)
@@ -75,7 +75,7 @@ bool InputUtilitiesCore::ExtraClickUp(int button)
     input.mi.dwExtraInfo = 0;
 
     try {
-        this->runningInputs.erase(button);
+        this->runningInputs.erase("extra_btn_" + std::to_string(button));
         return SendInput(1, &input, sizeof(INPUT));
     }
     catch (std::exception& e)
@@ -108,7 +108,7 @@ bool InputUtilitiesCore::vkKeyDown(WORD vkCode)
     bool success = SendInput(1, &input, sizeof(INPUT));
 
     if (success)
-        this->runningInputs.insert({ vkCode, c_event });
+        this->runningInputs.insert({ "vk_" + std::to_string(vkCode), c_event});
 
     return success;
 }
@@ -120,7 +120,7 @@ bool InputUtilitiesCore::vkKeyUp(WORD vkCode)
     input.ki.wVk = vkCode;
     input.ki.dwFlags = KEYEVENTF_KEYUP;
 
-    this->runningInputs.erase(vkCode);
+    this->runningInputs.erase("vk_" + std::to_string(vkCode));
 
     return SendInput(1, &input, sizeof(INPUT));
 }
@@ -139,7 +139,7 @@ bool InputUtilitiesCore::KeyDown(char key)
     bool success = SendInput(1, &input, sizeof(INPUT));
 
     if (success)
-        this->runningInputs.insert({ key, c_event });
+        this->runningInputs.insert({ "dk_" + std::to_string(key), c_event});
 
     return success;
 }
@@ -154,7 +154,7 @@ bool InputUtilitiesCore::KeyUp(char key)
         static_cast<WORD>(MapVirtualKeyEx(VkKeyScanA(key), MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
     input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
 
-    this->runningInputs.erase(key);
+    this->runningInputs.erase("dk_" + std::to_string(key));
 
     return SendInput(1, &input, sizeof(INPUT));
 }
@@ -178,7 +178,7 @@ bool InputUtilitiesCore::vkMultiKeyDown(const std::vector<WORD>& vkCodes)
 
         if (success)
         {
-            this->runningInputs.insert({ vkCode, c_event });
+            this->runningInputs.insert({ "mvk_" + std::to_string(vkCode), c_event });
             flag++;
         }
     }
@@ -201,7 +201,7 @@ bool InputUtilitiesCore::vkMultiKeyUp(const std::vector<WORD>& vkCodes)
         input.ki.dwFlags = KEYEVENTF_KEYUP;
         flag += SendInput(1, &input, sizeof(INPUT));
 
-        this->runningInputs.erase(vkCode);
+        this->runningInputs.erase("mvk_" + std::to_string(vkCode));
     }
 
     return (flag == vkCodes.size()) ? true : false;

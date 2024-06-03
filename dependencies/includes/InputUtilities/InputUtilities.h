@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include <stdexcept>
 #include <unordered_map>
-#include <iostream>
+#include <string>
 
 #define UP    1
 #define DOWN -1
@@ -49,7 +49,7 @@ public:
 	void reset();
 
 private:
-	std::unordered_map<WORD, Event> runningInputs;
+	std::unordered_map<std::string, Event> runningInputs;
 };
 
 class InputUtilities : public InputUtilitiesCore
