@@ -237,94 +237,47 @@ bool InputUtilities::leftClick(time_t ms_hold)
 {
     bool success = MouseEvent(MOUSEEVENTF_LEFTDOWN);
     Sleep(ms_hold);
-    success &= MouseEvent(MOUSEEVENTF_LEFTUP);
-
-    return success;
+    return success &= MouseEvent(MOUSEEVENTF_LEFTUP);
 }
 
 bool InputUtilities::rightClick(time_t ms_hold)
 {
     bool success = MouseEvent(MOUSEEVENTF_RIGHTDOWN);
     Sleep(ms_hold);
-    success &= MouseEvent(MOUSEEVENTF_RIGHTUP);
-
-    return success;
+    return success &= MouseEvent(MOUSEEVENTF_RIGHTUP);
 }
 
 bool InputUtilities::middleClick(time_t ms_hold)
 {
     bool success = MouseEvent(MOUSEEVENTF_MIDDLEDOWN);
     Sleep(ms_hold);
-    success &= MouseEvent(MOUSEEVENTF_MIDDLEUP);
-
-    return success;
+    return success &= MouseEvent(MOUSEEVENTF_MIDDLEUP);
 }
 
 bool InputUtilities::extraClick(int button, time_t ms_hold)
 {
     bool success = ExtraClickDown(button);
     Sleep(ms_hold);
-    success &= ExtraClickUp(button);
-
-    return success;
+    return success &= ExtraClickUp(button);
 }
 
-bool InputUtilities::vkKey(WORD vkCode)
+bool InputUtilities::vkKey(WORD vkCode, time_t ms_hold)
 {
-    int flag = 0;
-
-    INPUT input = { 0 };
-    input.type = INPUT_KEYBOARD;
-    input.ki.wVk = vkCode;
-    input.ki.dwFlags = 0;
-    flag += SendInput(1, &input, sizeof(INPUT));
-    input.ki.dwFlags = KEYEVENTF_KEYUP;
-    flag += SendInput(1, &input, sizeof(INPUT));
-
-    return (flag == 2) ? true : false;
+    int flag = vkKeyDown(vkCode);
+    Sleep(ms_hold);
+    return flag &= vkKeyUp(vkCode);
 }
 
-bool InputUtilities::directKey(char key)
+bool InputUtilities::directKey(char key, time_t ms_hold)
 {
-    int flag = 0;
-
-    INPUT input;
-    memset(&input, 0, sizeof(INPUT));
-    input.type = INPUT_KEYBOARD;
-    input.ki.dwExtraInfo = GetMessageExtraInfo();
-    input.ki.wScan =
-        static_cast<WORD>(MapVirtualKeyEx(VkKeyScanA(key), MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
-    input.ki.dwFlags = KEYEVENTF_SCANCODE;
-    flag += SendInput(1, &input, sizeof(INPUT));
-
-    input.ki.dwExtraInfo = GetMessageExtraInfo();
-    input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
-    flag += SendInput(1, &input, sizeof(INPUT));
-
-    return (flag == 2) ? true : false;
+    int flag = KeyDown(key);
+    Sleep(ms_hold);
+    return flag &= KeyUp(key);
 }
 
-bool InputUtilities::vkMultiKey(const std::vector<WORD>& vkCodes)
+bool InputUtilities::vkMultiKey(const std::vector<WORD>& vkCodes, time_t ms_hold)
 {
-    int flag = 0;
-    INPUT input;
-
-    input.type = INPUT_KEYBOARD;
-    input.ki.wScan = 0;
-    input.ki.time = 0;
-    input.ki.dwExtraInfo = 0;
-
-    for (const auto& vkCode : vkCodes) {
-        input.ki.wVk = vkCode;
-        input.ki.dwFlags = 0;
-        flag += SendInput(1, &input, sizeof(INPUT));
-    }
-
-    for (const auto& vkCode : vkCodes) {
-        input.ki.wVk = vkCode;
-        input.ki.dwFlags = KEYEVENTF_KEYUP;
-        flag += SendInput(1, &input, sizeof(INPUT));
-    }
-
-    return (flag == vkCodes.size() * 2) ? true : false;
+    int flag = vkMultiKeyDown(vkCodes);
+    Sleep(ms_hold);
+    return flag &= vkMultiKeyUp(vkCodes);
 }

@@ -57,8 +57,10 @@ Command MimicEngine::strToCommand(std::string cmd)
     else if (cmd == "EXTRACLICK") return Command::EXTRACLICK;
     else if (cmd == "KEYDOWN") return Command::KEYDOWN;
     else if (cmd == "KEYUP") return Command::KEYUP;
+    else if (cmd == "KEY") return Command::KEY;
     else if (cmd == "VKEYDOWN") return Command::VKEYDOWN;
     else if (cmd == "VKEYUP") return Command::VKEYUP;
+    else if (cmd == "VKEY") return Command::VKEY;
     else if (cmd == "MULTIKEYPRESSDOWN") return Command::MULTIKEYPRESSDOWN;
     else if (cmd == "MULTIKEYPRESSUP") return Command::MULTIKEYPRESSUP;
 
@@ -72,51 +74,143 @@ void MimicEngine::resetInstructions()
 
 int MimicEngine::processCmd(Instruction instruction)
 {
-    if (instruction.cmd == Command::SLEEP) Sleep(stoi(instruction.args[0]));
-    else if (instruction.cmd == Command::MOVE) inputUtils.SetCursorPos(stoi(instruction.args[0]), stoi(instruction.args[1]));
-    else if (instruction.cmd == Command::LCLICKDOWN) inputUtils.MouseEvent(MOUSEEVENTF_LEFTDOWN);
-    else if (instruction.cmd == Command::LCLICKUP) inputUtils.MouseEvent(MOUSEEVENTF_LEFTUP);
-    else if (instruction.cmd == Command::LCLICK) {
+    switch (instruction.cmd) {
+    case Command::SLEEP:
+    {
+        time_t ms_sleep = stoi(instruction.args[0]);
+        Sleep(ms_sleep);
+        break;
+    }
+    case Command::MOVE:
+    {
+        int x = stoi(instruction.args[0]), y = stoi(instruction.args[1]);
+        return inputUtils.SetCursorPos(x, y);
+    }
+    case Command::LCLICKDOWN:
+    {
+        return inputUtils.MouseEvent(MOUSEEVENTF_LEFTDOWN);
+    }
+    case Command::LCLICKUP:
+    {
+        return inputUtils.MouseEvent(MOUSEEVENTF_LEFTUP);
+    }
+    case Command::LCLICK:
+    {
         time_t ms_hold = instruction.args.empty() ? 0 : stoi(instruction.args[0]);
-        inputUtils.leftClick(ms_hold);
+        return inputUtils.leftClick(ms_hold);
     }
-    else if (instruction.cmd == Command::RCLICKDOWN) inputUtils.MouseEvent(MOUSEEVENTF_RIGHTDOWN);
-    else if (instruction.cmd == Command::RCLICKUP) inputUtils.MouseEvent(MOUSEEVENTF_RIGHTUP);
-    else if (instruction.cmd == Command::RCLICK) {
+    case Command::RCLICKDOWN:
+    {
+        return inputUtils.MouseEvent(MOUSEEVENTF_RIGHTDOWN);
+    }
+    case Command::RCLICKUP:
+    {
+        return inputUtils.MouseEvent(MOUSEEVENTF_RIGHTUP);
+    }
+    case Command::RCLICK:
+    {
         time_t ms_hold = instruction.args.empty() ? 0 : stoi(instruction.args[0]);
-        inputUtils.rightClick(ms_hold);
+        return inputUtils.rightClick(ms_hold);
     }
-    else if (instruction.cmd == Command::MCLICKDOWN) inputUtils.MouseEvent(MOUSEEVENTF_MIDDLEDOWN);
-    else if (instruction.cmd == Command::MCLICKUP) inputUtils.MouseEvent(MOUSEEVENTF_MIDDLEUP);
-    else if (instruction.cmd == Command::MCLICK) {
+    case Command::MCLICKDOWN:
+    {
+        return inputUtils.MouseEvent(MOUSEEVENTF_MIDDLEDOWN);
+    }
+    case Command::MCLICKUP:
+    {
+        return inputUtils.MouseEvent(MOUSEEVENTF_MIDDLEUP);
+    }
+    case Command::MCLICK:
+    {
         time_t ms_hold = instruction.args.empty() ? 0 : stoi(instruction.args[0]);
-        inputUtils.middleClick(ms_hold);
+        return inputUtils.middleClick(ms_hold);
     }
-    else if (instruction.cmd == Command::EXTRACLICKDOWN) inputUtils.ExtraClickDown(stoi(instruction.args[0]));
-    else if (instruction.cmd == Command::EXTRACLICKUP) inputUtils.ExtraClickUp(stoi(instruction.args[0]));
-    else if (instruction.cmd == Command::EXTRACLICK) {
+    case Command::MWHEELDOWN:
+    {
+        int scroll_num = stoi(instruction.args[0]);
+        return inputUtils.MouseWheelRoll(scroll_num, DOWN);
+    }
+    case Command::MWHEELUP:
+    {
+        int scroll_num = stoi(instruction.args[0]);
+        return inputUtils.MouseWheelRoll(scroll_num, UP);
+    }
+    case Command::EXTRACLICKDOWN:
+    {
+        int button = stoi(instruction.args[0]);
+        return inputUtils.ExtraClickDown(button);
+    }
+    case Command::EXTRACLICKUP:
+    {
+        int button = stoi(instruction.args[0]);
+        return inputUtils.ExtraClickUp(button);
+    }
+    case Command::EXTRACLICK:
+    {
         time_t ms_hold = instruction.args.empty() ? 0 : stoi(instruction.args[0]);
-        inputUtils.extraClick(ms_hold);
+        return inputUtils.extraClick(ms_hold);
     }
-    else if (instruction.cmd == Command::KEYDOWN) {
-        char key = std::tolower(instruction.args[0].front());
-        inputUtils.KeyDown(key);
-    }
-    else if (instruction.cmd == Command::KEYUP) {
-        char key = std::tolower(instruction.args[0].front());
-        inputUtils.KeyUp(key);
-    }
-    else if (instruction.cmd == Command::VKEYDOWN) {
+    case Command::VKEYDOWN:
+    {
         char key = std::toupper(instruction.args[0].front());
-        inputUtils.vkKeyDown(key);
+        return inputUtils.vkKeyDown(key);
     }
-    else if (instruction.cmd == Command::VKEYUP) {
+    case Command::VKEYUP:
+    {
         char key = std::toupper(instruction.args[0].front());
-        inputUtils.vkKeyUp(key);
+        return inputUtils.vkKeyUp(key);
     }
-    //else if (instruction.cmd == Command::MULTIKEYPRESSDOWN) inputUtils.vkMultiKey(instruction.args);
-    //else if (instruction.cmd == Command::MULTIKEYPRESSUP) inputUtils.KeyUp((char)instruction.args[0].c_str());
+    case Command::VKEY:
+    {
+        char key = std::toupper(instruction.args[0].front());
+        time_t ms_hold = instruction.args.size() == 1 ? 0 : stoi(instruction.args[1]);
+        return inputUtils.vkKey(key , ms_hold);
+    }
+    case Command::KEYDOWN:
+    {
+        char key = std::tolower(instruction.args[0].front());
+        return inputUtils.KeyDown(key);
+    }
+    case Command::KEYUP:
+    {
+        char key = std::tolower(instruction.args[0].front());
+        return inputUtils.KeyUp(key);
+    }
+    case Command::KEY:
+    {
+        char key = std::tolower(instruction.args[0].front());
+        time_t ms_hold = instruction.args.size() == 1 ? 0 : stoi(instruction.args[1]);
+        return inputUtils.directKey(key, ms_hold);
+    }
+    case Command::MULTIKEYPRESSDOWN:
+    {
+        break;
+    }
+    case Command::MULTIKEYPRESSUP:
+    {
+        break;
+    }
+    case Command::MULTIKEYPRESS:
+    {
+        break;
+    }
+    default:
+        break;
+    }
+    
     return 0;
+}
+
+std::vector<WORD> MimicEngine::str2wordVec(std::vector<std::string> vec)
+{
+    std::vector<WORD> word_vec;
+
+    for (const auto& it : vec)
+    {
+        //word_vec.push_back()
+    }
+
+    return word_vec;
 }
 
 void MimicEngine::run()

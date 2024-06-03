@@ -60,7 +60,7 @@ public:
 	bool middleClick(time_t ms_hold = 0);
 	bool extraClick(int button, time_t ms_hold = 0);
 
-	bool vkKey(WORD vkCode);
-	bool directKey(char key);
-	bool vkMultiKey(const std::vector<WORD>& vkCodes);
+	bool vkKey(WORD vkCode, time_t ms_hold = 0);
+	bool directKey(char key, time_t ms_hold = 0);
+	bool vkMultiKey(const std::vector<WORD>& vkCodes, time_t ms_hold = 0);
 };

@@ -21,9 +21,9 @@ enum Command
 	MWHEELDOWN, MWHEELUP,
 	EXTRACLICKDOWN, EXTRACLICKUP, EXTRACLICK,
 
-	VKEYDOWN, VKEYUP,
-	KEYDOWN, KEYUP,
-	MULTIKEYPRESSDOWN, MULTIKEYPRESSUP
+	VKEYDOWN, VKEYUP, VKEY,
+	KEYDOWN, KEYUP, KEY,
+	MULTIKEYPRESSDOWN, MULTIKEYPRESSUP, MULTIKEYPRESS
 };
 
 struct Instruction
@@ -45,6 +45,8 @@ private:
 	void resetInstructions();
 
 	int processCmd(Instruction instruction);
+
+	std::vector<WORD> str2wordVec(std::vector<std::string> vec);
 
 private:
 	std::vector<Instruction> m_instructions;
