@@ -75,6 +75,7 @@ bool InputUtilitiesCore::ExtraClickUp(int button)
     input.mi.dwExtraInfo = 0;
 
     try {
+        this->runningInputs.erase(button);
         return SendInput(1, &input, sizeof(INPUT));
     }
     catch (std::exception& e)
@@ -118,6 +119,9 @@ bool InputUtilitiesCore::vkKeyUp(WORD vkCode)
     input.type = INPUT_KEYBOARD;
     input.ki.wVk = vkCode;
     input.ki.dwFlags = KEYEVENTF_KEYUP;
+
+    this->runningInputs.erase(vkCode);
+
     return SendInput(1, &input, sizeof(INPUT));
 }
 
@@ -149,6 +153,9 @@ bool InputUtilitiesCore::KeyUp(char key)
     input.ki.wScan =
         static_cast<WORD>(MapVirtualKeyEx(VkKeyScanA(key), MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
     input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+
+    this->runningInputs.erase(key);
+
     return SendInput(1, &input, sizeof(INPUT));
 }
 
@@ -193,6 +200,8 @@ bool InputUtilitiesCore::vkMultiKeyUp(const std::vector<WORD>& vkCodes)
         input.ki.wVk = vkCode;
         input.ki.dwFlags = KEYEVENTF_KEYUP;
         flag += SendInput(1, &input, sizeof(INPUT));
+
+        this->runningInputs.erase(vkCode);
     }
 
     return (flag == vkCodes.size()) ? true : false;
