@@ -281,3 +281,23 @@ bool InputUtilities::vkMultiKey(const std::vector<WORD>& vkCodes, time_t ms_hold
     Sleep(ms_hold);
     return flag &= vkMultiKeyUp(vkCodes);
 }
+
+void InputUtilities::vkTypeString(std::string str)
+{
+    for (char cChar : str) {
+        short vk = VkKeyScan(cChar);
+        if ((vk >> 8) & 1) {
+            keybd_event(VK_LSHIFT, 0, 0, 0);
+        }
+        keybd_event(static_cast<unsigned char>(vk), 0, 0, 0);
+        keybd_event(static_cast<unsigned char>(vk), 0, KEYEVENTF_KEYUP, 0);
+        if ((vk >> 8) & 1) {
+            keybd_event(VK_LSHIFT, 0, KEYEVENTF_KEYUP, 0);
+        }
+    }
+}
+
+void InputUtilities::directTypeString(std::string str)
+{
+
+}

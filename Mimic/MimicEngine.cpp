@@ -63,6 +63,9 @@ Command MimicEngine::strToCommand(std::string cmd)
     else if (cmd == "VKEY") return Command::VKEY;
     else if (cmd == "MULTIKEYPRESSDOWN") return Command::MULTIKEYPRESSDOWN;
     else if (cmd == "MULTIKEYPRESSUP") return Command::MULTIKEYPRESSUP;
+    else if (cmd == "MULTIKEYPRESS") return Command::MULTIKEYPRESS;
+    else if (cmd == "VKTYPESTRING") return Command::VKTYPESTRING;
+    else if (cmd == "TYPESTRING") return Command::TYPESTRING;
 
     return Command::NONE;
 }
@@ -164,7 +167,7 @@ int MimicEngine::processCmd(Instruction instruction)
     {
         char key = std::toupper(instruction.args[0].front());
         time_t ms_hold = instruction.args.size() == 1 ? 0 : stoi(instruction.args[1]);
-        return inputUtils.vkKey(key , ms_hold);
+        return inputUtils.vkKey(key, ms_hold);
     }
     case Command::KEYDOWN:
     {
@@ -194,11 +197,23 @@ int MimicEngine::processCmd(Instruction instruction)
     {
         break;
     }
+    case Command::VKTYPESTRING:
+    {
+        std::string str = instruction.args[0];
+        inputUtils.vkTypeString(str);
+        return 1;
+    }
+    case Command::TYPESTRING:
+    {
+        std::string str = instruction.args[0];
+        inputUtils.directTypeString(str);
+        return 1;
+    }
     default:
         break;
     }
-    
-    return 0;
+
+    return -1;
 }
 
 std::vector<WORD> MimicEngine::str2wordVec(std::vector<std::string> vec)

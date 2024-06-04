@@ -55,7 +55,7 @@
       <Filter>Header Files\Input</Filter>
     </ClCompile>
     <ClCompile Include="MimicEngine.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

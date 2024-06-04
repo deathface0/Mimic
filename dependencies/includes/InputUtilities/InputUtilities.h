@@ -63,4 +63,6 @@ public:
 	bool vkKey(WORD vkCode, time_t ms_hold = 0);
 	bool directKey(char key, time_t ms_hold = 0);
 	bool vkMultiKey(const std::vector<WORD>& vkCodes, time_t ms_hold = 0);
+	void vkTypeString(std::string str);
+	void directTypeString(std::string str);
 };
