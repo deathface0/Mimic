@@ -18,7 +18,7 @@ int MimicEngine::readFile(std::string filepath)
                 args.push_back(arg);
             }
 
-            Command cmd = strToCommand(args.front());
+            EVENT_TYPE cmd = strToEventType(args.front());
             args.erase(args.begin());
 
             //Check syntax error
@@ -37,37 +37,37 @@ int MimicEngine::readFile(std::string filepath)
     return 1;
 }
 
-Command MimicEngine::strToCommand(std::string cmd)
+EVENT_TYPE MimicEngine::strToEventType(std::string cmd)
 {
-    if (cmd == "SLEEP") return Command::SLEEP; 
-    else if (cmd == "MOVE") return Command::MOVE;
-    else if (cmd == "LCLICKDOWN") return Command::LCLICKDOWN;
-    else if (cmd == "LCLICKUP") return Command::LCLICKUP;
-    else if (cmd == "LCLICK") return Command::LCLICK;
-    else if (cmd == "RCLICKDOWN") return Command::RCLICKDOWN;
-    else if (cmd == "RCLICKUP") return Command::RCLICKUP;
-    else if (cmd == "RCLICK") return Command::RCLICK;
-    else if (cmd == "MCLICKDOWN") return Command::MCLICKDOWN;
-    else if (cmd == "MCLICKUP") return Command::MCLICKUP;
-    else if (cmd == "MCLICK") return Command::MCLICK;
-    else if (cmd == "MWHEELDOWN") return Command::MWHEELDOWN;
-    else if (cmd == "MWHEELUP") return Command::MWHEELUP;
-    else if (cmd == "EXTRACLICKDOWN") return Command::EXTRACLICKDOWN;
-    else if (cmd == "EXTRACLICKUP") return Command::EXTRACLICKUP;
-    else if (cmd == "EXTRACLICK") return Command::EXTRACLICK;
-    else if (cmd == "KEYDOWN") return Command::KEYDOWN;
-    else if (cmd == "KEYUP") return Command::KEYUP;
-    else if (cmd == "KEY") return Command::KEY;
-    else if (cmd == "VKEYDOWN") return Command::VKEYDOWN;
-    else if (cmd == "VKEYUP") return Command::VKEYUP;
-    else if (cmd == "VKEY") return Command::VKEY;
-    else if (cmd == "MULTIKEYPRESSDOWN") return Command::MULTIKEYPRESSDOWN;
-    else if (cmd == "MULTIKEYPRESSUP") return Command::MULTIKEYPRESSUP;
-    else if (cmd == "MULTIKEYPRESS") return Command::MULTIKEYPRESS;
-    else if (cmd == "VKTYPESTRING") return Command::VKTYPESTRING;
-    else if (cmd == "TYPESTRING") return Command::TYPESTRING;
+    if (cmd == "SLEEP") return EVENT_TYPE::SLEEP; 
+    else if (cmd == "MOVE") return EVENT_TYPE::MOVE;
+    else if (cmd == "LCLICKDOWN") return EVENT_TYPE::LCLICKDOWN;
+    else if (cmd == "LCLICKUP") return EVENT_TYPE::LCLICKUP;
+    else if (cmd == "LCLICK") return EVENT_TYPE::LCLICK;
+    else if (cmd == "RCLICKDOWN") return EVENT_TYPE::RCLICKDOWN;
+    else if (cmd == "RCLICKUP") return EVENT_TYPE::RCLICKUP;
+    else if (cmd == "RCLICK") return EVENT_TYPE::RCLICK;
+    else if (cmd == "MCLICKDOWN") return EVENT_TYPE::MCLICKDOWN;
+    else if (cmd == "MCLICKUP") return EVENT_TYPE::MCLICKUP;
+    else if (cmd == "MCLICK") return EVENT_TYPE::MCLICK;
+    else if (cmd == "MWHEELDOWN") return EVENT_TYPE::MWHEELDOWN;
+    else if (cmd == "MWHEELUP") return EVENT_TYPE::MWHEELUP;
+    else if (cmd == "EXTRACLICKDOWN") return EVENT_TYPE::EXTRACLICKDOWN;
+    else if (cmd == "EXTRACLICKUP") return EVENT_TYPE::EXTRACLICKUP;
+    else if (cmd == "EXTRACLICK") return EVENT_TYPE::EXTRACLICK;
+    else if (cmd == "KEYDOWN") return EVENT_TYPE::KEYDOWN;
+    else if (cmd == "KEYUP") return EVENT_TYPE::KEYUP;
+    else if (cmd == "KEY") return EVENT_TYPE::KEY;
+    else if (cmd == "VKEYDOWN") return EVENT_TYPE::VKEYDOWN;
+    else if (cmd == "VKEYUP") return EVENT_TYPE::VKEYUP;
+    else if (cmd == "VKEY") return EVENT_TYPE::VKEY;
+    else if (cmd == "MULTIKEYPRESSDOWN") return EVENT_TYPE::MULTIKEYPRESSDOWN;
+    else if (cmd == "MULTIKEYPRESSUP") return EVENT_TYPE::MULTIKEYPRESSUP;
+    else if (cmd == "MULTIKEYPRESS") return EVENT_TYPE::MULTIKEYPRESS;
+    else if (cmd == "VKTYPESTRING") return EVENT_TYPE::VKTYPESTRING;
+    else if (cmd == "TYPESTRING") return EVENT_TYPE::TYPESTRING;
 
-    return Command::NONE;
+    return EVENT_TYPE::NONE;
 }
 
 void MimicEngine::resetInstructions()
@@ -78,132 +78,132 @@ void MimicEngine::resetInstructions()
 int MimicEngine::processCmd(Instruction instruction)
 {
     switch (instruction.cmd) {
-    case Command::SLEEP:
+    case EVENT_TYPE::SLEEP:
     {
         time_t ms_sleep = stoi(instruction.args[0]);
         Sleep(ms_sleep);
         break;
     }
-    case Command::MOVE:
+    case EVENT_TYPE::MOVE:
     {
         int x = stoi(instruction.args[0]), y = stoi(instruction.args[1]);
         return inputUtils.SetCursorPos(x, y);
     }
-    case Command::LCLICKDOWN:
+    case EVENT_TYPE::LCLICKDOWN:
     {
         return inputUtils.MouseEvent(MOUSEEVENTF_LEFTDOWN);
     }
-    case Command::LCLICKUP:
+    case EVENT_TYPE::LCLICKUP:
     {
         return inputUtils.MouseEvent(MOUSEEVENTF_LEFTUP);
     }
-    case Command::LCLICK:
+    case EVENT_TYPE::LCLICK:
     {
         time_t ms_hold = instruction.args.empty() ? 0 : stoi(instruction.args[0]);
         return inputUtils.leftClick(ms_hold);
     }
-    case Command::RCLICKDOWN:
+    case EVENT_TYPE::RCLICKDOWN:
     {
         return inputUtils.MouseEvent(MOUSEEVENTF_RIGHTDOWN);
     }
-    case Command::RCLICKUP:
+    case EVENT_TYPE::RCLICKUP:
     {
         return inputUtils.MouseEvent(MOUSEEVENTF_RIGHTUP);
     }
-    case Command::RCLICK:
+    case EVENT_TYPE::RCLICK:
     {
         time_t ms_hold = instruction.args.empty() ? 0 : stoi(instruction.args[0]);
         return inputUtils.rightClick(ms_hold);
     }
-    case Command::MCLICKDOWN:
+    case EVENT_TYPE::MCLICKDOWN:
     {
         return inputUtils.MouseEvent(MOUSEEVENTF_MIDDLEDOWN);
     }
-    case Command::MCLICKUP:
+    case EVENT_TYPE::MCLICKUP:
     {
         return inputUtils.MouseEvent(MOUSEEVENTF_MIDDLEUP);
     }
-    case Command::MCLICK:
+    case EVENT_TYPE::MCLICK:
     {
         time_t ms_hold = instruction.args.empty() ? 0 : stoi(instruction.args[0]);
         return inputUtils.middleClick(ms_hold);
     }
-    case Command::MWHEELDOWN:
+    case EVENT_TYPE::MWHEELDOWN:
     {
         int scroll_num = stoi(instruction.args[0]);
         return inputUtils.MouseWheelRoll(scroll_num, DOWN);
     }
-    case Command::MWHEELUP:
+    case EVENT_TYPE::MWHEELUP:
     {
         int scroll_num = stoi(instruction.args[0]);
         return inputUtils.MouseWheelRoll(scroll_num, UP);
     }
-    case Command::EXTRACLICKDOWN:
+    case EVENT_TYPE::EXTRACLICKDOWN:
     {
         int button = stoi(instruction.args[0]);
         return inputUtils.ExtraClickDown(button);
     }
-    case Command::EXTRACLICKUP:
+    case EVENT_TYPE::EXTRACLICKUP:
     {
         int button = stoi(instruction.args[0]);
         return inputUtils.ExtraClickUp(button);
     }
-    case Command::EXTRACLICK:
+    case EVENT_TYPE::EXTRACLICK:
     {
         time_t ms_hold = instruction.args.empty() ? 0 : stoi(instruction.args[0]);
         return inputUtils.extraClick(ms_hold);
     }
-    case Command::VKEYDOWN:
+    case EVENT_TYPE::VKEYDOWN:
     {
         char key = std::toupper(instruction.args[0].front());
         return inputUtils.vkKeyDown(key);
     }
-    case Command::VKEYUP:
+    case EVENT_TYPE::VKEYUP:
     {
         char key = std::toupper(instruction.args[0].front());
         return inputUtils.vkKeyUp(key);
     }
-    case Command::VKEY:
+    case EVENT_TYPE::VKEY:
     {
         char key = std::toupper(instruction.args[0].front());
         time_t ms_hold = instruction.args.size() == 1 ? 0 : stoi(instruction.args[1]);
         return inputUtils.vkKey(key, ms_hold);
     }
-    case Command::KEYDOWN:
+    case EVENT_TYPE::KEYDOWN:
     {
         char key = std::tolower(instruction.args[0].front());
         return inputUtils.KeyDown(key);
     }
-    case Command::KEYUP:
+    case EVENT_TYPE::KEYUP:
     {
         char key = std::tolower(instruction.args[0].front());
         return inputUtils.KeyUp(key);
     }
-    case Command::KEY:
+    case EVENT_TYPE::KEY:
     {
         char key = std::tolower(instruction.args[0].front());
         time_t ms_hold = instruction.args.size() == 1 ? 0 : stoi(instruction.args[1]);
         return inputUtils.directKey(key, ms_hold);
     }
-    case Command::MULTIKEYPRESSDOWN:
+    case EVENT_TYPE::MULTIKEYPRESSDOWN:
     {
         break;
     }
-    case Command::MULTIKEYPRESSUP:
+    case EVENT_TYPE::MULTIKEYPRESSUP:
     {
         break;
     }
-    case Command::MULTIKEYPRESS:
+    case EVENT_TYPE::MULTIKEYPRESS:
     {
         break;
     }
-    case Command::VKTYPESTRING:
+    case EVENT_TYPE::VKTYPESTRING:
     {
         std::string str = instruction.args[0];
         inputUtils.vkTypeString(str);
         return 1;
     }
-    case Command::TYPESTRING:
+    case EVENT_TYPE::TYPESTRING:
     {
         std::string str = instruction.args[0];
         inputUtils.directTypeString(str);

@@ -11,6 +11,7 @@
 
 #include "GUI.h"
 #include "MimicEngine.h"
+#include "Hook.h"
 
 #ifdef IMGUI
 int width = 1280;
@@ -58,6 +59,14 @@ int main()
 
 int main()
 {
+	Global::recording = true;
+	Hook hook;
+
+	while(true)
+	{
+		Sleep(1000);
+	}
+
 	MimicEngine m;
 	m.readFile("C:\\Users\\Deathface\\Desktop\\commands.txt");
 	m.run();

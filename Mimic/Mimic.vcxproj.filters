@@ -22,6 +22,9 @@
     <Filter Include="Header Files\GUI">
       <UniqueIdentifier>{6a1eb434-9160-4b07-b836-55e5645b3682}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\time_utils">
+      <UniqueIdentifier>{d2016985-be7c-4e1d-8f30-065e3041403e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -57,6 +60,12 @@
     <ClCompile Include="MimicEngine.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="Hook.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\includes\time_utils\time_utils.cpp">
+      <Filter>Header Files\time_utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\includes\imgui\imgui.h">
@@ -91,6 +100,15 @@
     </ClInclude>
     <ClInclude Include="MimicEngine.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Hook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\includes\time_utils\time_utils.h">
+      <Filter>Header Files\time_utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

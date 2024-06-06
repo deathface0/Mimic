@@ -144,6 +144,8 @@
     <ClCompile Include="..\dependencies\includes\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\dependencies\includes\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\dependencies\includes\InputUtilities\InputUtilities.cpp" />
+    <ClCompile Include="..\dependencies\includes\time_utils\time_utils.cpp" />
+    <ClCompile Include="Hook.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MimicEngine.cpp" />
   </ItemGroup>
@@ -157,7 +159,10 @@
     <ClInclude Include="..\dependencies\includes\imgui\imstb_textedit.h" />
     <ClInclude Include="..\dependencies\includes\imgui\imstb_truetype.h" />
     <ClInclude Include="..\dependencies\includes\InputUtilities\InputUtilities.h" />
+    <ClInclude Include="..\dependencies\includes\time_utils\time_utils.h" />
+    <ClInclude Include="Global.h" />
     <ClInclude Include="GUI.h" />
+    <ClInclude Include="Hook.h" />
     <ClInclude Include="MimicEngine.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

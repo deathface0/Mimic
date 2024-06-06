@@ -7006,7 +7006,7 @@ struct ExampleAppConsole
 {
     char                  InputBuf[256];
     ImVector<char*>       Items;
-    ImVector<const char*> Commands;
+    ImVector<const char*> EVENT_TYPEs;
     ImVector<char*>       History;
     int                   HistoryPos;    // -1: new line, 0..History.Size-1 browsing history.
     ImGuiTextFilter       Filter;
@@ -7021,10 +7021,10 @@ struct ExampleAppConsole
         HistoryPos = -1;
 
         // "CLASSIFY" is here to provide the test case where "C"+[tab] completes to "CL" and display multiple matches.
-        Commands.push_back("HELP");
-        Commands.push_back("HISTORY");
-        Commands.push_back("CLEAR");
-        Commands.push_back("CLASSIFY");
+        EVENT_TYPEs.push_back("HELP");
+        EVENT_TYPEs.push_back("HISTORY");
+        EVENT_TYPEs.push_back("CLEAR");
+        EVENT_TYPEs.push_back("CLASSIFY");
         AutoScroll = true;
         ScrollToBottom = false;
         AddLog("Welcome to Dear ImGui!");
@@ -7180,7 +7180,7 @@ struct ExampleAppConsole
         ImGui::EndChild();
         ImGui::Separator();
 
-        // Command-line
+        // EVENT_TYPE-line
         bool reclaim_focus = false;
         ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
         if (ImGui::InputText("Input", InputBuf, IM_ARRAYSIZE(InputBuf), input_text_flags, &TextEditCallbackStub, (void*)this))
@@ -7188,7 +7188,7 @@ struct ExampleAppConsole
             char* s = InputBuf;
             Strtrim(s);
             if (s[0])
-                ExecCommand(s);
+                ExecEVENT_TYPE(s);
             strcpy(s, "");
             reclaim_focus = true;
         }
@@ -7201,7 +7201,7 @@ struct ExampleAppConsole
         ImGui::End();
     }
 
-    void    ExecCommand(const char* command_line)
+    void    ExecEVENT_TYPE(const char* command_line)
     {
         AddLog("# %s\n", command_line);
 
@@ -7224,9 +7224,9 @@ struct ExampleAppConsole
         }
         else if (Stricmp(command_line, "HELP") == 0)
         {
-            AddLog("Commands:");
-            for (int i = 0; i < Commands.Size; i++)
-                AddLog("- %s", Commands[i]);
+            AddLog("EVENT_TYPEs:");
+            for (int i = 0; i < EVENT_TYPEs.Size; i++)
+                AddLog("- %s", EVENT_TYPEs[i]);
         }
         else if (Stricmp(command_line, "HISTORY") == 0)
         {
@@ -7272,9 +7272,9 @@ struct ExampleAppConsole
 
                 // Build a list of candidates
                 ImVector<const char*> candidates;
-                for (int i = 0; i < Commands.Size; i++)
-                    if (Strnicmp(Commands[i], word_start, (int)(word_end - word_start)) == 0)
-                        candidates.push_back(Commands[i]);
+                for (int i = 0; i < EVENT_TYPEs.Size; i++)
+                    if (Strnicmp(EVENT_TYPEs[i], word_start, (int)(word_end - word_start)) == 0)
+                        candidates.push_back(EVENT_TYPEs[i]);
 
                 if (candidates.Size == 0)
                 {
