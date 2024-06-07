@@ -5,7 +5,10 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <thread>
+#include <chrono>
 
+#include "time_utils/time_utils.h"
 #include "InputUtilities/InputUtilities.h"
 #include "Global.h"
 
@@ -15,6 +18,7 @@ public:
 	//MimicEngine();
 
 	int readFile(std::string filepath);
+	void eventToInstruction(const std::vector<MM_Event*>& events);
 	void run();
 
 private:
@@ -23,7 +27,6 @@ private:
 
 	int processCmd(Instruction instruction);
 
-	std::vector<WORD> str2wordVec(std::vector<std::string> vec);
 
 private:
 	std::vector<Instruction> m_instructions;

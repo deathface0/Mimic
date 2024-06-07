@@ -51,7 +51,7 @@ int main()
 	}
 
 	glfwDestroyWindow(window);
-	glfwTerminate();
+	glfwTerminate()
 
 	return 0;
 }
@@ -59,17 +59,22 @@ int main()
 
 int main()
 {
-	Global::recording = true;
 	Hook hook;
 
-	while(true)
-	{
-		Sleep(1000);
-	}
+	Sleep(3000);
+	std::cout << "RECORDING..." << std::endl;
+	Global::recording = true;
+
+	Sleep(5000);
+	std::cout << "RECORDING END" << std::endl;
+	Global::recording = false;
 
 	MimicEngine m;
-	m.readFile("C:\\Users\\Deathface\\Desktop\\commands.txt");
+	//m.readFile("C:\\Users\\Deathface\\Desktop\\commands.txt");
+	m.eventToInstruction(Global::recordBuf);
 	m.run();
+
+
 
 	return 0;
 }

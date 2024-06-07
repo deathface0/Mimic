@@ -69,13 +69,14 @@ LRESULT Hook::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
     if (nCode == HC_ACTION && Global::recording)
     {
         PKBDLLHOOKSTRUCT p = (PKBDLLHOOKSTRUCT)lParam;
+        time_t mm_timestamp = TimeUtils::getUnixTimestamp();
 
         switch (wParam)
         {
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
         {
-            MM_Event* e = new MM_Event({ TimeUtils::getUnixTimestamp(), 0, EVENT_TYPE::KEYDOWN, p->vkCode });
+            MM_Event* e = new MM_Event({ mm_timestamp, 0, EVENT_TYPE::KEYDOWN, p->vkCode });
             if (Global::pressedKeys.find(p->vkCode) == Global::pressedKeys.end())
             {
                 Global::recordBuf.emplace_back(e);
@@ -94,10 +95,10 @@ LRESULT Hook::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
                 });
 
             if (it != Global::recordBuf.rend())
-                (*it)->end = TimeUtils::getUnixTimestamp();
+                (*it)->end = mm_timestamp;
 
             Global::pressedKeys.erase(p->vkCode);
-            std::cout << "KEYUP: " << p->vkCode << " - (start)" << (*it)->start << " | (end)" << (*it)->end << std::endl;
+            std::cout << "KEYUP: " << p->vkCode << std::endl;
             break;
         }
         }
@@ -110,52 +111,59 @@ LRESULT Hook::LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
     if (nCode == HC_ACTION && Global::recording)
     {
         MSLLHOOKSTRUCT* pMouseStruct = (MSLLHOOKSTRUCT*)lParam;
+        time_t mm_timestamp = TimeUtils::getUnixTimestamp();
 
         switch (wParam)
         {
         case WM_LBUTTONDOWN:
         {
-            MM_Event* e = new MM_Event({ TimeUtils::getUnixTimestamp(), 0, EVENT_TYPE::LCLICKDOWN, pMouseStruct->pt });
+            MM_Event* e = new MM_Event({ mm_timestamp, 0, EVENT_TYPE::LCLICKDOWN, pMouseStruct->pt });
             Global::recordBuf.emplace_back(e);
             std::cout << "LBDOWN: " << std::endl;
             break;
         }
         case WM_LBUTTONUP:
         {
+            MM_Event* e = new MM_Event({ mm_timestamp, 0, EVENT_TYPE::LCLICKUP, pMouseStruct->pt });
+            Global::recordBuf.emplace_back(e);
+
             auto it = std::find_if(Global::recordBuf.rbegin(), Global::recordBuf.rend(),
                 [&](const MM_Event* mm_event) {
                     return mm_event->type == EVENT_TYPE::LCLICKDOWN;
                 });
 
             if (it != Global::recordBuf.rend())
-                (*it)->end = TimeUtils::getUnixTimestamp();
+                (*it)->end = mm_timestamp;
 
             std::cout << "LBUP: " << std::endl;
             break;
         }
         case WM_RBUTTONDOWN:
         {
-            MM_Event* e = new MM_Event({ TimeUtils::getUnixTimestamp(), 0 , EVENT_TYPE::RCLICKDOWN, pMouseStruct->pt });
+            MM_Event* e = new MM_Event({ mm_timestamp, 0 , EVENT_TYPE::RCLICKDOWN, pMouseStruct->pt });
             Global::recordBuf.emplace_back(e);
             std::cout << "RBDOWN: " << std::endl;
             break;
         }
         case WM_RBUTTONUP:
         {
+            MM_Event* e = new MM_Event({ mm_timestamp, 0, EVENT_TYPE::RCLICKUP, pMouseStruct->pt });
+            Global::recordBuf.emplace_back(e);
+
             auto it = std::find_if(Global::recordBuf.rbegin(), Global::recordBuf.rend(),
                 [&](const MM_Event* mm_event) {
                     return mm_event->type == EVENT_TYPE::RCLICKDOWN;
                 });
 
             if (it != Global::recordBuf.rend())
-                (*it)->end = TimeUtils::getUnixTimestamp();
+                (*it)->end = mm_timestamp;
 
             std::cout << "RBUP: " << std::endl;
             break;
         }
         case WM_MOUSEMOVE:
         {
-            MM_Event* e = new MM_Event({ 0, 0, EVENT_TYPE::MOVE, pMouseStruct->pt });
+            MM_Event* e = new MM_Event({ mm_timestamp, mm_timestamp, EVENT_TYPE::MOVE, pMouseStruct->pt });
             Global::recordBuf.emplace_back(e);
 
             break;

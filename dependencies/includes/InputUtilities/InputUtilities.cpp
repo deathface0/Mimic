@@ -10,8 +10,8 @@ bool InputUtilitiesCore::SetCursorPos(int x, int y)
     INPUT input;
     input.type = INPUT_MOUSE;
     input.mi.time = 0;
-    input.mi.dx = x * (65536 / GetSystemMetrics(SM_CXSCREEN));
-    input.mi.dy = y * (65536 / GetSystemMetrics(SM_CYSCREEN));
+    input.mi.dx = static_cast<LONG>(x * 65536.0 / GetSystemMetrics(SM_CXSCREEN));
+    input.mi.dy = static_cast<LONG>(y * 65536.0 / GetSystemMetrics(SM_CYSCREEN));
     input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
     return SendInput(1, &input, sizeof(INPUT));
 }
@@ -127,19 +127,20 @@ bool InputUtilitiesCore::vkKeyUp(WORD vkCode)
 
 bool InputUtilitiesCore::KeyDown(char key)
 {
+    WORD vk_key = static_cast<WORD>(MapVirtualKeyEx(VkKeyScanA(key), MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+
     Event c_event{ -1, -1, key };
 
     INPUT input;
     memset(&input, 0, sizeof(INPUT));
     input.type = INPUT_KEYBOARD;
     input.ki.dwExtraInfo = GetMessageExtraInfo();
-    input.ki.wScan =
-        static_cast<WORD>(MapVirtualKeyEx(VkKeyScanA(key), MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+    input.ki.wScan = vk_key;
     input.ki.dwFlags = KEYEVENTF_SCANCODE;
     bool success = SendInput(1, &input, sizeof(INPUT));
 
     if (success)
-        this->runningInputs.insert({ "dk_" + std::to_string(key), c_event});
+        this->runningInputs.insert({ "dk_" + std::to_string(key), c_event });
 
     return success;
 }
