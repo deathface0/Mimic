@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <string>
+#include <iostream>
 
 #define UP    1
 #define DOWN -1
@@ -41,8 +42,8 @@ public:
 
 	bool vkKeyDown(WORD vkCode);
 	bool vkKeyUp(WORD vkCode);
-	bool KeyDown(char key);
-	bool KeyUp(char key);
+	bool KeyDown(char key); bool KeyDown(DWORD key); 
+	bool KeyUp(char key); bool KeyUp(DWORD key);
 	bool vkMultiKeyDown(const std::vector<WORD>& vkCodes);
 	bool vkMultiKeyUp(const std::vector<WORD>& vkCodes);
 
@@ -62,6 +63,7 @@ public:
 
 	bool vkKey(WORD vkCode, time_t ms_hold = 0);
 	bool directKey(char key, time_t ms_hold = 0);
+	bool directKey(DWORD key, time_t ms_hold = 0);
 	bool vkMultiKey(const std::vector<WORD>& vkCodes, time_t ms_hold = 0);
 	void vkTypeString(std::string str);
 	void directTypeString(std::string str);

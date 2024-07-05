@@ -71,9 +71,10 @@ int main()
 	std::cout << "RECORDING END" << std::endl;
 	Global::recording = false;
 
+	Sleep(1000);
+
 	MimicEngine m;
 	//m.readFile("C:\\Users\\Deathface\\Desktop\\commands.txt");
-	//m.eventToInstruction(Global::recordBuf);
 
 	m.importRecordBuf();
 

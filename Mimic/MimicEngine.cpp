@@ -21,6 +21,18 @@ int MimicEngine::readFile(std::string filepath)
             EVENT_TYPE cmd = strToEventType(args.front());
             args.erase(args.begin());
 
+            if (cmd == EVENT_TYPE::KEYDOWN || cmd == EVENT_TYPE::KEYUP || cmd == EVENT_TYPE::KEY)
+            {
+                WORD vkCode = VkKeyScanEx(args[0].front(), GetKeyboardLayout(0));
+                if (vkCode == -1)
+                {
+                    // Character cannot be mapped to a virtual key code
+                    std::cout << "ERROR MAPPING KEY!!" << std::endl;
+                    return -1;
+                }
+                args[0] = std::to_string(static_cast<UCHAR>(vkCode & 0xFF));
+            }
+
             //Check syntax error
 
             Instruction* instruction = new Instruction(cmd, args);
@@ -177,19 +189,19 @@ int MimicEngine::processCmd(Instruction* instruction)
     }
     case EVENT_TYPE::KEYDOWN:
     {
-        char key = std::tolower(instruction->args[0].front());
-        return inputUtils.KeyDown(key);
+        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
+        return inputUtils.KeyDown(vk_code);
     }
     case EVENT_TYPE::KEYUP:
     {
-        char key = std::tolower(instruction->args[0].front());
-        return inputUtils.KeyUp(key);
+        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
+        return inputUtils.KeyUp(vk_code);
     }
     case EVENT_TYPE::KEY:
     {
-        char key = std::tolower(instruction->args[0].front());
+        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
         time_t ms_hold = instruction->args.size() == 1 ? 0 : stoi(instruction->args[1]);
-        return inputUtils.directKey(key, ms_hold);
+        return inputUtils.directKey(vk_code, ms_hold);
     }
     case EVENT_TYPE::MULTIKEYPRESSDOWN:
     {

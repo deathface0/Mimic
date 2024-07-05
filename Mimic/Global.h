@@ -27,13 +27,6 @@ enum EVENT_TYPE
 	MOVE,
 };
 
-struct MM_Event
-{
-	time_t start, end;
-	EVENT_TYPE type;
-	std::variant<WORD, POINT> data;
-};
-
 struct Instruction
 {
 	Instruction(EVENT_TYPE cmd, const std::vector<std::string>& args)

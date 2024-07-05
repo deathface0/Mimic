@@ -145,6 +145,26 @@ bool InputUtilitiesCore::KeyDown(char key)
     return success;
 }
 
+bool InputUtilitiesCore::KeyDown(DWORD key)
+{
+    WORD vk_key = static_cast<WORD>(MapVirtualKeyEx(key, MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+
+    Event c_event{ -1, -1, static_cast<char>(key) };
+
+    INPUT input;
+    memset(&input, 0, sizeof(INPUT));
+    input.type = INPUT_KEYBOARD;
+    input.ki.dwExtraInfo = GetMessageExtraInfo();
+    input.ki.wScan = vk_key;
+    input.ki.dwFlags = KEYEVENTF_SCANCODE;
+    bool success = SendInput(1, &input, sizeof(INPUT));
+
+    if (success)
+        this->runningInputs.insert({ "dk_" + std::to_string(static_cast<char>(key)), c_event });
+
+    return success;
+}
+
 bool InputUtilitiesCore::KeyUp(char key)
 {
     INPUT input;
@@ -156,6 +176,20 @@ bool InputUtilitiesCore::KeyUp(char key)
     input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
 
     this->runningInputs.erase("dk_" + std::to_string(key));
+
+    return SendInput(1, &input, sizeof(INPUT));
+}
+
+bool InputUtilitiesCore::KeyUp(DWORD key)
+{
+    INPUT input;
+    memset(&input, 0, sizeof(INPUT));
+    input.type = INPUT_KEYBOARD;
+    input.ki.dwExtraInfo = GetMessageExtraInfo();
+    input.ki.wScan = static_cast<WORD>(MapVirtualKeyEx(key, MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+    input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+
+    this->runningInputs.erase("dk_" + std::to_string(static_cast<char>(key)));
 
     return SendInput(1, &input, sizeof(INPUT));
 }
@@ -270,6 +304,13 @@ bool InputUtilities::vkKey(WORD vkCode, time_t ms_hold)
 }
 
 bool InputUtilities::directKey(char key, time_t ms_hold)
+{
+    int flag = KeyDown(key);
+    Sleep(ms_hold);
+    return flag &= KeyUp(key);
+}
+
+bool InputUtilities::directKey(DWORD key, time_t ms_hold)
 {
     int flag = KeyDown(key);
     Sleep(ms_hold);

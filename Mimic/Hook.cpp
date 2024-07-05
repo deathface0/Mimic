@@ -80,12 +80,16 @@ LRESULT Hook::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
         //std::cout << duration << std::endl;
 
         PKBDLLHOOKSTRUCT p = (PKBDLLHOOKSTRUCT)lParam;
+        //tstring wcharkey = VirtualKeyCodeToString(p->vkCode);
+        //std::string charkey = std::string(wcharkey.begin(), wcharkey.end());
 
         switch (wParam)
         {
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
         {
+            
+
             Instruction* e = new Instruction({ EVENT_TYPE::KEYDOWN, {std::to_string(p->vkCode)} });
             if (Global::pressedKeys.find(p->vkCode) == Global::pressedKeys.end())
             {
