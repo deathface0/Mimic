@@ -61,9 +61,11 @@ int main()
 {
 	Hook hook;
 
-	Sleep(3000);
+	Sleep(1000);
 	std::cout << "RECORDING..." << std::endl;
 	Global::recording = true;
+
+	Hook::lastEventTimestamp = TimeUtils::getUnixTimestamp();
 
 	Sleep(5000);
 	std::cout << "RECORDING END" << std::endl;
@@ -71,7 +73,10 @@ int main()
 
 	MimicEngine m;
 	//m.readFile("C:\\Users\\Deathface\\Desktop\\commands.txt");
-	m.eventToInstruction(Global::recordBuf);
+	//m.eventToInstruction(Global::recordBuf);
+
+	m.importRecordBuf();
+
 	m.run();
 
 

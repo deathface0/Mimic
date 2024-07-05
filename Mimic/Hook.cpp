@@ -1,5 +1,7 @@
 #include "Hook.h"
 
+time_t Hook::lastEventTimestamp = 0;
+
 Hook::Hook()
 {
     std::thread(&Hook::MsgLoop, this).detach();
@@ -68,15 +70,23 @@ LRESULT Hook::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     if (nCode == HC_ACTION && Global::recording)
     {
+        time_t mm_end = TimeUtils::getUnixTimestamp();
+        time_t duration = TimeUtils::TimeElapsed(Hook::lastEventTimestamp, mm_end);
+        Hook::lastEventTimestamp = mm_end;
+
+        Instruction* e = new Instruction({ EVENT_TYPE::SLEEP, {std::to_string(duration)} });
+        Global::recordBuf.emplace_back(e);
+
+        //std::cout << duration << std::endl;
+
         PKBDLLHOOKSTRUCT p = (PKBDLLHOOKSTRUCT)lParam;
-        time_t mm_timestamp = TimeUtils::getUnixTimestamp();
 
         switch (wParam)
         {
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
         {
-            MM_Event* e = new MM_Event({ mm_timestamp, 0, EVENT_TYPE::KEYDOWN, p->vkCode });
+            Instruction* e = new Instruction({ EVENT_TYPE::KEYDOWN, {std::to_string(p->vkCode)} });
             if (Global::pressedKeys.find(p->vkCode) == Global::pressedKeys.end())
             {
                 Global::recordBuf.emplace_back(e);
@@ -89,14 +99,8 @@ LRESULT Hook::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
         case WM_KEYUP:
         case WM_SYSKEYUP:
         {
-            auto it = std::find_if(Global::recordBuf.rbegin(), Global::recordBuf.rend(),
-                [&](const MM_Event* mm_event) {
-                    return std::holds_alternative<WORD>(mm_event->data) && std::get<WORD>(mm_event->data) == p->vkCode;
-                });
-
-            if (it != Global::recordBuf.rend())
-                (*it)->end = mm_timestamp;
-
+            Instruction* e = new Instruction({ EVENT_TYPE::KEYUP, {std::to_string(p->vkCode)} });
+            Global::recordBuf.emplace_back(e);
             Global::pressedKeys.erase(p->vkCode);
             std::cout << "KEYUP: " << p->vkCode << std::endl;
             break;
@@ -110,61 +114,61 @@ LRESULT Hook::LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     if (nCode == HC_ACTION && Global::recording)
     {
+        time_t mm_end = TimeUtils::getUnixTimestamp();
+        time_t duration = TimeUtils::TimeElapsed(Hook::lastEventTimestamp, mm_end);
+        Hook::lastEventTimestamp = mm_end;
+
+        Instruction* e = new Instruction({ EVENT_TYPE::SLEEP, {std::to_string(duration)} });
+        Global::recordBuf.emplace_back(e);
+
+        //std::cout << duration << std::endl;
+
         MSLLHOOKSTRUCT* pMouseStruct = (MSLLHOOKSTRUCT*)lParam;
-        time_t mm_timestamp = TimeUtils::getUnixTimestamp();
 
         switch (wParam)
         {
         case WM_LBUTTONDOWN:
         {
-            MM_Event* e = new MM_Event({ mm_timestamp, 0, EVENT_TYPE::LCLICKDOWN, pMouseStruct->pt });
+            Instruction* e = new Instruction({ EVENT_TYPE::LCLICKDOWN, {} });
             Global::recordBuf.emplace_back(e);
+
             std::cout << "LBDOWN: " << std::endl;
             break;
         }
         case WM_LBUTTONUP:
         {
-            MM_Event* e = new MM_Event({ mm_timestamp, 0, EVENT_TYPE::LCLICKUP, pMouseStruct->pt });
+            Instruction* e = new Instruction({ EVENT_TYPE::LCLICKUP, {} });
             Global::recordBuf.emplace_back(e);
-
-            auto it = std::find_if(Global::recordBuf.rbegin(), Global::recordBuf.rend(),
-                [&](const MM_Event* mm_event) {
-                    return mm_event->type == EVENT_TYPE::LCLICKDOWN;
-                });
-
-            if (it != Global::recordBuf.rend())
-                (*it)->end = mm_timestamp;
 
             std::cout << "LBUP: " << std::endl;
             break;
         }
         case WM_RBUTTONDOWN:
         {
-            MM_Event* e = new MM_Event({ mm_timestamp, 0 , EVENT_TYPE::RCLICKDOWN, pMouseStruct->pt });
+            Instruction* e = new Instruction({ EVENT_TYPE::RCLICKDOWN, {} });
             Global::recordBuf.emplace_back(e);
             std::cout << "RBDOWN: " << std::endl;
             break;
         }
         case WM_RBUTTONUP:
         {
-            MM_Event* e = new MM_Event({ mm_timestamp, 0, EVENT_TYPE::RCLICKUP, pMouseStruct->pt });
+            Instruction* e = new Instruction({ EVENT_TYPE::RCLICKUP, {} });
             Global::recordBuf.emplace_back(e);
-
-            auto it = std::find_if(Global::recordBuf.rbegin(), Global::recordBuf.rend(),
-                [&](const MM_Event* mm_event) {
-                    return mm_event->type == EVENT_TYPE::RCLICKDOWN;
-                });
-
-            if (it != Global::recordBuf.rend())
-                (*it)->end = mm_timestamp;
 
             std::cout << "RBUP: " << std::endl;
             break;
         }
         case WM_MOUSEMOVE:
         {
-            MM_Event* e = new MM_Event({ mm_timestamp, mm_timestamp, EVENT_TYPE::MOVE, pMouseStruct->pt });
-            Global::recordBuf.emplace_back(e);
+            time_t mm_end = TimeUtils::getUnixTimestamp();
+            time_t duration = TimeUtils::TimeElapsed(Hook::lastEventTimestamp, mm_end);
+            Hook::lastEventTimestamp = mm_end;
+
+            Instruction* e1 = new Instruction({ EVENT_TYPE::SLEEP, {std::to_string(duration)} });
+            Global::recordBuf.emplace_back(e1);
+
+            Instruction* e2 = new Instruction({ EVENT_TYPE::MOVE, {std::to_string(pMouseStruct->pt.x), std::to_string(pMouseStruct->pt.y)} });
+            Global::recordBuf.emplace_back(e2);
 
             break;
         }
@@ -183,7 +187,8 @@ void Hook::MsgLoop()
 
     // Keep this app running until we're told to stop
     MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0)) {    //this while loop keeps the hook
+    time_t mm_stimestamp, mm_etimestamp;
+    while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

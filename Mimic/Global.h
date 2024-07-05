@@ -14,7 +14,6 @@ enum EVENT_TYPE
 
 	SLEEP = 0,
 
-	MOVE,
 	LCLICKDOWN, LCLICKUP, LCLICK,
 	RCLICKDOWN, RCLICKUP, RCLICK,
 	MCLICKDOWN, MCLICKUP, MCLICK,
@@ -24,7 +23,8 @@ enum EVENT_TYPE
 	VKEYDOWN, VKEYUP, VKEY,
 	KEYDOWN, KEYUP, KEY,
 	MULTIKEYPRESSDOWN, MULTIKEYPRESSUP, MULTIKEYPRESS,
-	VKTYPESTRING, TYPESTRING
+	VKTYPESTRING, TYPESTRING,
+	MOVE,
 };
 
 struct MM_Event
@@ -36,6 +36,10 @@ struct MM_Event
 
 struct Instruction
 {
+	Instruction(EVENT_TYPE cmd, const std::vector<std::string>& args)
+		: cmd(cmd), args(args)
+	{}
+
 	EVENT_TYPE cmd;
 	std::vector<std::string> args;
 };
@@ -44,6 +48,6 @@ namespace Global
 {
 	inline bool recording = false;
 
-	inline std::vector<MM_Event*> recordBuf;
+	inline std::vector<Instruction*> recordBuf;
 	inline std::unordered_set<WORD> pressedKeys;
 }
