@@ -1,5 +1,14 @@
 #include "MimicEngine.h"
 
+MimicEngine::~MimicEngine()
+{
+    for (const auto instruction : m_instructions)
+        delete instruction;
+
+    for (const auto instruction : Global::recordBuf)
+        delete instruction;
+}
+
 int MimicEngine::readFile(std::string filepath)
 {
     resetInstructions();
@@ -51,12 +60,22 @@ int MimicEngine::readFile(std::string filepath)
 
 void MimicEngine::importRecordBuf()
 {
+    resetInstructions();
+
+    for (const auto instruction : Global::recordBuf)
+    {
+        Instruction* newInstruction = new Instruction(*instruction);
+        this->m_instructions.push_back(newInstruction);
+    }
     this->m_instructions = Global::recordBuf;
+
+    Global::recordBuf.clear();
 }
 
 EVENT_TYPE MimicEngine::strToEventType(std::string cmd)
 {
-    if (cmd == "SLEEP") return EVENT_TYPE::SLEEP; 
+    if (cmd == "SLEEP") return EVENT_TYPE::SLEEP;
+    else if (cmd == "NSSLEEP") return EVENT_TYPE::NSSLEEP;
     else if (cmd == "MOVE") return EVENT_TYPE::MOVE;
     else if (cmd == "LCLICKDOWN") return EVENT_TYPE::LCLICKDOWN;
     else if (cmd == "LCLICKUP") return EVENT_TYPE::LCLICKUP;
@@ -98,8 +117,17 @@ int MimicEngine::processCmd(Instruction* instruction)
     case EVENT_TYPE::SLEEP:
     {
         time_t ms_sleep = stoi(instruction->args[0]);
-        std::this_thread::sleep_for(std::chrono::nanoseconds(ms_sleep));
+        std::this_thread::sleep_for(std::chrono::milliseconds(ms_sleep));
         
+        break;
+    }
+    case EVENT_TYPE::NSSLEEP:
+    {
+        size_t ns_sleep = stoul(instruction->args[0]);
+        auto astart = std::chrono::steady_clock::now();
+        auto target = astart + std::chrono::nanoseconds(ns_sleep);
+        while (std::chrono::steady_clock::now() < target) {} // Busy-wait loop
+
         break;
     }
     case EVENT_TYPE::MOVE:
@@ -236,18 +264,18 @@ int MimicEngine::processCmd(Instruction* instruction)
 
 void MimicEngine::run()
 {
+    int counter = 0;
     for (const auto instruction : m_instructions)
     {
-        std::cout << instruction->cmd;
-        for (const auto& arg : instruction->args)
-            std::cout << " " << arg << " ";
-
-        std::cout << "\n";
-
-        //auto start = std::chrono::high_resolution_clock::now();
+        counter++;
+        /*std::cout << instruction->cmd << " - ";
+        for (const auto arg : instruction->args)
+        {
+            std::cout << arg << ", ";
+        }
+        std::cout << "" << std::endl;*/
         processCmd(instruction);
-        //auto end = std::chrono::high_resolution_clock::now();
-        //std::chrono::duration<double, std::milli> elapsed = end - start;
-        //std::cout << "TBI: " << elapsed.count() << " ms" << std::endl;
     }
+    counter /= 2;
+    std::cout << "COUNT: " << counter << std::endl;
 }

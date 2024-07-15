@@ -12,7 +12,7 @@ enum EVENT_TYPE
 {
 	NONE = -1,
 
-	SLEEP = 0,
+	SLEEP = 0, NSSLEEP,
 
 	LCLICKDOWN, LCLICKUP, LCLICK,
 	RCLICKDOWN, RCLICKUP, RCLICK,
@@ -31,6 +31,10 @@ struct Instruction
 {
 	Instruction(EVENT_TYPE cmd, const std::vector<std::string>& args)
 		: cmd(cmd), args(args)
+	{}
+
+	Instruction(const Instruction& other)
+		: cmd(other.cmd), args(other.args)
 	{}
 
 	EVENT_TYPE cmd;

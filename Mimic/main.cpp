@@ -65,7 +65,7 @@ int main()
 	std::cout << "RECORDING..." << std::endl;
 	Global::recording = true;
 
-	Hook::lastEventTimestamp = TimeUtils::getUnixTimestamp();
+	Hook::lastEventTimestamp = std::chrono::high_resolution_clock::now();
 
 	Sleep(5000);
 	std::cout << "RECORDING END" << std::endl;
@@ -78,9 +78,11 @@ int main()
 
 	m.importRecordBuf();
 
+	auto start = std::chrono::high_resolution_clock::now();
 	m.run();
-
-
+	auto end = std::chrono::high_resolution_clock::now();
+	auto elap = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+	std::cout << "TOTAL MACRO: " << elap.count() << "ms" << std::endl;
 
 	return 0;
 }

@@ -15,7 +15,7 @@
 class MimicEngine
 {
 public:
-	//MimicEngine();
+	~MimicEngine();
 
 	int readFile(std::string filepath);
 	void importRecordBuf();

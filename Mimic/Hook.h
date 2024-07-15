@@ -16,12 +16,10 @@ public:
 	~Hook();
 
 private:
-	static tstring VirtualKeyCodeToString(UCHAR virtualKey);
-
 	static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 	static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam);
 	void MsgLoop();
 
 public:
-	static time_t lastEventTimestamp;
+	static std::chrono::steady_clock::time_point lastEventTimestamp;
 };
