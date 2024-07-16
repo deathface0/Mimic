@@ -25,7 +25,11 @@ LRESULT Hook::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
         {
-            Instruction* e = new Instruction({ EVENT_TYPE::KEYDOWN, {std::to_string(p->vkCode)} });
+            bool isShiftPressed = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+            bool isCapsLockOn = (GetKeyState(VK_CAPITAL) & 0x0001) != 0;
+            bool upper = isShiftPressed ^ isCapsLockOn;
+
+            Instruction* e = new Instruction({ EVENT_TYPE::KEYDOWN, {std::to_string(p->vkCode), std::to_string(upper)}});
             if (Global::pressedKeys.find(p->vkCode) == Global::pressedKeys.end())
             {
                 Global::recordBuf.emplace_back(e);

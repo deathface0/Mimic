@@ -15,7 +15,7 @@ int MimicEngine::readFile(std::string filepath)
 
     std::ifstream file(filepath);
     std::string line;
-    std::vector<std::string> args;
+    std::vector<std::string> args(5);
 
     if (file.is_open()) {
         while (getline(file, line)) {
@@ -30,8 +30,10 @@ int MimicEngine::readFile(std::string filepath)
             EVENT_TYPE cmd = strToEventType(args.front());
             args.erase(args.begin());
 
-            if (cmd == EVENT_TYPE::KEYDOWN || cmd == EVENT_TYPE::KEYUP || cmd == EVENT_TYPE::KEY)
+            if (cmd == EVENT_TYPE::KEYDOWN || cmd == EVENT_TYPE::KEYUP || cmd == EVENT_TYPE::KEY ||
+                cmd == EVENT_TYPE::VKEYDOWN || cmd == EVENT_TYPE::VKEYUP || cmd == EVENT_TYPE::VKEY)
             {
+                bool upper = std::isupper(args[0].front());
                 WORD vkCode = VkKeyScanEx(args[0].front(), GetKeyboardLayout(0));
                 if (vkCode == -1)
                 {
@@ -40,6 +42,15 @@ int MimicEngine::readFile(std::string filepath)
                     return -1;
                 }
                 args[0] = std::to_string(static_cast<UCHAR>(vkCode & 0xFF));
+                if (args.size() == 1)
+                {
+                    args.push_back("0");
+                    args.push_back(std::to_string(upper));
+                }
+                else if (args.size() == 2)
+                {
+                    args.push_back(std::to_string(upper));
+                }
             }
 
             //Check syntax error
@@ -201,24 +212,24 @@ int MimicEngine::processCmd(Instruction* instruction)
     }
     case EVENT_TYPE::VKEYDOWN:
     {
-        char key = std::toupper(instruction->args[0].front());
-        return inputUtils.vkKeyDown(key);
+        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
+        return inputUtils.vkKeyDown(vk_code, stoi(instruction->args[2]));
     }
     case EVENT_TYPE::VKEYUP:
     {
-        char key = std::toupper(instruction->args[0].front());
-        return inputUtils.vkKeyUp(key);
+        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
+        return inputUtils.vkKeyUp(vk_code);
     }
     case EVENT_TYPE::VKEY:
     {
-        char key = std::toupper(instruction->args[0].front());
-        time_t ms_hold = instruction->args.size() == 1 ? 0 : stoi(instruction->args[1]);
-        return inputUtils.vkKey(key, ms_hold);
+        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
+        time_t ms_hold = std::stoul(instruction->args[1], nullptr, 0);
+        return inputUtils.vkKey(vk_code, stoi(instruction->args[2]), ms_hold);
     }
     case EVENT_TYPE::KEYDOWN:
     {
         DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
-        return inputUtils.KeyDown(vk_code);
+        return inputUtils.KeyDown(vk_code, stoi(instruction->args[2]));
     }
     case EVENT_TYPE::KEYUP:
     {
@@ -228,8 +239,8 @@ int MimicEngine::processCmd(Instruction* instruction)
     case EVENT_TYPE::KEY:
     {
         DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
-        time_t ms_hold = instruction->args.size() == 1 ? 0 : stoi(instruction->args[1]);
-        return inputUtils.directKey(vk_code, ms_hold);
+        time_t ms_hold = std::stoul(instruction->args[1], nullptr, 0);
+        return inputUtils.directKey(vk_code, stoi(instruction->args[2]), ms_hold);
     }
     case EVENT_TYPE::MULTIKEYPRESSDOWN:
     {

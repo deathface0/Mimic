@@ -97,15 +97,36 @@ bool InputUtilitiesCore::MouseWheelRoll(int scrolls, int delta)
     return SendInput(1, &input, sizeof(INPUT));
 }
 
-bool InputUtilitiesCore::vkKeyDown(WORD vkCode)
+bool InputUtilitiesCore::vkKeyDown(WORD vkCode, bool upper)
 {
     Event c_event{ -1, vkCode, -1 };
 
+    // Check the state of the Shift and Caps Lock keys
+    bool isShiftPressed = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+    bool isCapsLockOn = (GetKeyState(VK_CAPITAL) & 0x0001) != 0;
+    bool isUpper = isShiftPressed ^ isCapsLockOn;
+
     INPUT input = { 0 };
+    if (isUpper ^ upper)
+    {
+        input.type = INPUT_KEYBOARD;
+        input.ki.dwFlags = KEYEVENTF_SCANCODE;
+        input.ki.wScan = MapVirtualKey(VK_LSHIFT, 0);
+        SendInput(1, &input, sizeof(input));
+    }
+
     input.type = INPUT_KEYBOARD;
     input.ki.wVk = vkCode;
     input.ki.dwFlags = 0;
     bool success = SendInput(1, &input, sizeof(INPUT));
+
+    if (isUpper ^ upper)
+    {
+        input.type = INPUT_KEYBOARD;
+        input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+        input.ki.wScan = MapVirtualKey(VK_LSHIFT, 0);
+        SendInput(1, &input, sizeof(input));
+    }
 
     if (success)
         this->runningInputs.insert({ "vk_" + std::to_string(vkCode), c_event});
@@ -125,29 +146,66 @@ bool InputUtilitiesCore::vkKeyUp(WORD vkCode)
     return SendInput(1, &input, sizeof(INPUT));
 }
 
-bool InputUtilitiesCore::KeyDown(char key)
-{
-    WORD vk_key = static_cast<WORD>(MapVirtualKeyEx(VkKeyScanA(key), MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+//bool InputUtilitiesCore::KeyDown(char key)
+//{
+//    WORD vk_key = static_cast<WORD>(MapVirtualKeyEx(VkKeyScanA(key), MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+//
+//    Event c_event{ -1, -1, key };
+//
+//    INPUT input;
+//    memset(&input, 0, sizeof(INPUT));
+//    input.type = INPUT_KEYBOARD;
+//    input.ki.dwExtraInfo = GetMessageExtraInfo();
+//    input.ki.wScan = vk_key;
+//    input.ki.dwFlags = KEYEVENTF_SCANCODE;
+//    bool success = SendInput(1, &input, sizeof(INPUT));
+//
+//    if (success)
+//        this->runningInputs.insert({ "dk_" + std::to_string(key), c_event });
+//
+//    return success;
+//}
 
-    Event c_event{ -1, -1, key };
+bool InputUtilitiesCore::KeyDown(DWORD key, bool upper)
+{
+    Event c_event{ -1, -1, static_cast<char>(key) };
+
+    WORD vk_key = static_cast<WORD>(MapVirtualKeyEx(key, MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+
+    // Check the state of the Shift and Caps Lock keys
+    bool isShiftPressed = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+    bool isCapsLockOn = (GetKeyState(VK_CAPITAL) & 0x0001) != 0;
+    bool isUpper = isShiftPressed ^ isCapsLockOn;
 
     INPUT input;
     memset(&input, 0, sizeof(INPUT));
+    if (isUpper ^ upper)
+    {
+        input.type = INPUT_KEYBOARD;
+        input.ki.dwFlags = KEYEVENTF_SCANCODE;
+        input.ki.wScan = MapVirtualKey(VK_LSHIFT, 0);
+        SendInput(1, &input, sizeof(input));
+    }
+
     input.type = INPUT_KEYBOARD;
     input.ki.dwExtraInfo = GetMessageExtraInfo();
     input.ki.wScan = vk_key;
     input.ki.dwFlags = KEYEVENTF_SCANCODE;
     bool success = SendInput(1, &input, sizeof(INPUT));
 
+    if (isUpper ^ upper)
+    {
+        input.type = INPUT_KEYBOARD;
+        input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+        input.ki.wScan = MapVirtualKey(VK_LSHIFT, 0);
+        SendInput(1, &input, sizeof(input));
+    }
+
     if (success)
-        this->runningInputs.insert({ "dk_" + std::to_string(key), c_event });
+        this->runningInputs.insert({ "dk_" + std::to_string(static_cast<char>(key)), c_event });
 
-    return success;
-}
 
-bool InputUtilitiesCore::KeyDown(DWORD key)
-{
-    WORD vk_key = static_cast<WORD>(MapVirtualKeyEx(key, MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+    /*WORD vk_key = static_cast<WORD>(MapVirtualKeyEx(key, MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
 
     Event c_event{ -1, -1, static_cast<char>(key) };
 
@@ -160,33 +218,35 @@ bool InputUtilitiesCore::KeyDown(DWORD key)
     bool success = SendInput(1, &input, sizeof(INPUT));
 
     if (success)
-        this->runningInputs.insert({ "dk_" + std::to_string(static_cast<char>(key)), c_event });
+        this->runningInputs.insert({ "dk_" + std::to_string(static_cast<char>(key)), c_event });*/
 
     return success;
 }
 
-bool InputUtilitiesCore::KeyUp(char key)
-{
-    INPUT input;
-    memset(&input, 0, sizeof(INPUT));
-    input.type = INPUT_KEYBOARD;
-    input.ki.dwExtraInfo = GetMessageExtraInfo();
-    input.ki.wScan =
-        static_cast<WORD>(MapVirtualKeyEx(VkKeyScanA(key), MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
-    input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
-
-    this->runningInputs.erase("dk_" + std::to_string(key));
-
-    return SendInput(1, &input, sizeof(INPUT));
-}
+//bool InputUtilitiesCore::KeyUp(char key)
+//{
+//    INPUT input;
+//    memset(&input, 0, sizeof(INPUT));
+//    input.type = INPUT_KEYBOARD;
+//    input.ki.dwExtraInfo = GetMessageExtraInfo();
+//    input.ki.wScan =
+//        static_cast<WORD>(MapVirtualKeyEx(VkKeyScanA(key), MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+//    input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+//
+//    this->runningInputs.erase("dk_" + std::to_string(key));
+//
+//    return SendInput(1, &input, sizeof(INPUT));
+//}
 
 bool InputUtilitiesCore::KeyUp(DWORD key)
 {
+    WORD vk_key = static_cast<WORD>(MapVirtualKeyEx(key, MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+
     INPUT input;
     memset(&input, 0, sizeof(INPUT));
     input.type = INPUT_KEYBOARD;
     input.ki.dwExtraInfo = GetMessageExtraInfo();
-    input.ki.wScan = static_cast<WORD>(MapVirtualKeyEx(key, MAPVK_VK_TO_VSC, GetKeyboardLayout(0)));
+    input.ki.wScan = vk_key;
     input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
 
     this->runningInputs.erase("dk_" + std::to_string(static_cast<char>(key)));
@@ -296,23 +356,23 @@ bool InputUtilities::extraClick(int button, time_t ms_hold)
     return success &= ExtraClickUp(button);
 }
 
-bool InputUtilities::vkKey(WORD vkCode, time_t ms_hold)
+bool InputUtilities::vkKey(WORD vkCode, bool upper, time_t ms_hold)
 {
-    int flag = vkKeyDown(vkCode);
+    int flag = vkKeyDown(vkCode, upper);
     Sleep(ms_hold);
     return flag &= vkKeyUp(vkCode);
 }
 
-bool InputUtilities::directKey(char key, time_t ms_hold)
-{
-    int flag = KeyDown(key);
-    Sleep(ms_hold);
-    return flag &= KeyUp(key);
-}
+//bool InputUtilities::directKey(char key, bool upper, time_t ms_hold)
+//{
+//    int flag = KeyDown(key, upper);
+//    Sleep(ms_hold);
+//    return flag &= KeyUp(key);
+//}
 
-bool InputUtilities::directKey(DWORD key, time_t ms_hold)
+bool InputUtilities::directKey(DWORD key, bool upper, time_t ms_hold)
 {
-    int flag = KeyDown(key);
+    int flag = KeyDown(key, upper);
     Sleep(ms_hold);
     return flag &= KeyUp(key);
 }
