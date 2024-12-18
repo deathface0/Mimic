@@ -71,43 +71,11 @@ void MimicEngine::importRecordBuf()
 
 EVENT_TYPE MimicEngine::strToEventType(std::string cmd)
 {
-    if (cmd == "SLEEP") return EVENT_TYPE::SLEEP;
-    else if (cmd == "NSSLEEP") return EVENT_TYPE::NSSLEEP;
-    else if (cmd == "MOVE") return EVENT_TYPE::MOVE;
-    else if (cmd == "LCLICKDOWN") return EVENT_TYPE::LCLICKDOWN;
-    else if (cmd == "LCLICKUP") return EVENT_TYPE::LCLICKUP;
-    else if (cmd == "LCLICK") return EVENT_TYPE::LCLICK;
-    else if (cmd == "RCLICKDOWN") return EVENT_TYPE::RCLICKDOWN;
-    else if (cmd == "RCLICKUP") return EVENT_TYPE::RCLICKUP;
-    else if (cmd == "RCLICK") return EVENT_TYPE::RCLICK;
-    else if (cmd == "MCLICKDOWN") return EVENT_TYPE::MCLICKDOWN;
-    else if (cmd == "MCLICKUP") return EVENT_TYPE::MCLICKUP;
-    else if (cmd == "MCLICK") return EVENT_TYPE::MCLICK;
-    else if (cmd == "MWHEELDOWN") return EVENT_TYPE::MWHEELDOWN;
-    else if (cmd == "MWHEELUP") return EVENT_TYPE::MWHEELUP;
-    else if (cmd == "EXTRACLICKDOWN") return EVENT_TYPE::EXTRACLICKDOWN;
-    else if (cmd == "EXTRACLICKUP") return EVENT_TYPE::EXTRACLICKUP;
-    else if (cmd == "EXTRACLICK") return EVENT_TYPE::EXTRACLICK;
-    else if (cmd == "SCKEYDOWN") return EVENT_TYPE::SCKEYDOWN;
-    else if (cmd == "SCKEYUP") return EVENT_TYPE::SCKEYUP;
-    else if (cmd == "SCKEY") return EVENT_TYPE::SCKEY;
-    else if (cmd == "VKEYDOWN") return EVENT_TYPE::VKEYDOWN;
-    else if (cmd == "VKEYUP") return EVENT_TYPE::VKEYUP;
-    else if (cmd == "VKEY") return EVENT_TYPE::VKEY;
-    else if (cmd == "UCKEYDOWN") return EVENT_TYPE::UCKEYDOWN;
-    else if (cmd == "UCKEYUP") return EVENT_TYPE::UCKEYUP;
-    else if (cmd == "UCKEY") return EVENT_TYPE::UCKEY;
-    else if (cmd == "MULTIVKDOWN") return EVENT_TYPE::MULTIVKDOWN;
-    else if (cmd == "MULTIVKUP") return EVENT_TYPE::MULTIVKUP;
-    else if (cmd == "MULTIVK") return EVENT_TYPE::MULTIVK;
-    else if (cmd == "MULTISCDOWN") return EVENT_TYPE::MULTISCDOWN;
-    else if (cmd == "MULTISCUP") return EVENT_TYPE::MULTISCUP;
-    else if (cmd == "MULTISC") return EVENT_TYPE::MULTISC;
-    else if (cmd == "MULTIUCDOWN") return EVENT_TYPE::MULTIUCDOWN;
-    else if (cmd == "MULTIUCUP") return EVENT_TYPE::MULTIUCUP;
-    else if (cmd == "MULTIUC") return EVENT_TYPE::MULTIUC;
-    else if (cmd == "VKTYPESTRING") return EVENT_TYPE::VKTYPESTRING;
-    else if (cmd == "SCTYPESTRING") return EVENT_TYPE::SCTYPESTRING;
+    using namespace Global;
+
+    auto it = cmdMap.find(cmd);
+    if (it != cmdMap.end())
+        return it->second;
 
     return EVENT_TYPE::NONE;
 }
