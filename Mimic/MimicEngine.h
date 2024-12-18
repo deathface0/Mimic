@@ -10,6 +10,7 @@
 
 #include "time_utils/time_utils.h"
 #include "InputUtilities/InputUtilities.h"
+#include "VK.h"
 #include "Global.h"
 
 class MimicEngine

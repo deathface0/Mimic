@@ -5,6 +5,7 @@
 #include <string>
 #include <Windows.h>
 #include <variant>
+#include "json/json.h"
 
 typedef std::basic_string<TCHAR> tstring;
 
@@ -14,22 +15,32 @@ enum EVENT_TYPE
 
 	SLEEP = 0, NSSLEEP,
 
-	LCLICKDOWN, LCLICKUP, LCLICK,
-	RCLICKDOWN, RCLICKUP, RCLICK,
-	MCLICKDOWN, MCLICKUP, MCLICK,
-	MWHEELDOWN, MWHEELUP,
-	EXTRACLICKDOWN, EXTRACLICKUP, EXTRACLICK,
-
-	VKEYDOWN, VKEYUP, VKEY,
-	KEYDOWN, KEYUP, KEY,
-	MULTIKEYPRESSDOWN, MULTIKEYPRESSUP, MULTIKEYPRESS,
-	VKTYPESTRING, TYPESTRING,
 	MOVE,
+
+	LCLICKDOWN, LCLICKUP,
+	RCLICKDOWN, RCLICKUP,
+	MCLICKDOWN, MCLICKUP,
+	MWHEELDOWN, MWHEELUP,
+	EXTRACLICKDOWN, EXTRACLICKUP,
+
+	VKEYDOWN, VKEYUP,
+	SCKEYDOWN, SCKEYUP,
+	UCKEYDOWN, UCKEYUP,
+
+	MULTIVKDOWN, MULTIVKUP,
+	MULTISCDOWN, MULTISCUP,
+	MULTIUCDOWN, MULTIUCUP,
+
+	LCLICK, RCLICK, MCLICK, EXTRACLICK,
+	VKEY, SCKEY, UCKEY,
+	MULTIVK, MULTISC, MULTIUC,
+
+	VKTYPESTRING, SCTYPESTRING,
 };
 
 struct Instruction
 {
-	Instruction(EVENT_TYPE cmd, const std::vector<std::string>& args)
+	Instruction(EVENT_TYPE cmd, const Json::Value& args)
 		: cmd(cmd), args(args)
 	{}
 
@@ -38,7 +49,7 @@ struct Instruction
 	{}
 
 	EVENT_TYPE cmd;
-	std::vector<std::string> args;
+	Json::Value args;
 };
 
 namespace Global 

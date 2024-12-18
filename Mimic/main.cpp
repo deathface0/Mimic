@@ -81,7 +81,7 @@ int main()
 	Sleep(1000);*/
 
 	MimicEngine m;
-	m.readFile("C:\\Users\\Deathface\\Desktop\\commands.txt");
+	m.readFile("C:\\Users\\Deathface\\Desktop\\commands.json");
 
 	//m.importRecordBuf();
 

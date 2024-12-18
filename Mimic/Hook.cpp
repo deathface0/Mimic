@@ -29,10 +29,10 @@ LRESULT Hook::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
             bool isCapsLockOn = (GetKeyState(VK_CAPITAL) & 0x0001) != 0;
             bool upper = isShiftPressed ^ isCapsLockOn;
 
-            Instruction* e = new Instruction({ EVENT_TYPE::KEYDOWN, {std::to_string(p->vkCode), std::to_string(upper)}});
+            //Instruction* e = new Instruction({ EVENT_TYPE::SCKEYDOWN, {std::to_string(p->vkCode), std::to_string(upper)}});
             if (Global::pressedKeys.find(p->vkCode) == Global::pressedKeys.end())
             {
-                Global::recordBuf.emplace_back(e);
+                //Global::recordBuf.emplace_back(e);
                 Global::pressedKeys.insert(p->vkCode);
                 std::cout << "KEYDOWN: " << p->vkCode << std::endl;
             }
@@ -42,7 +42,7 @@ LRESULT Hook::LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
         case WM_KEYUP:
         case WM_SYSKEYUP:
         {
-            Instruction* e = new Instruction({ EVENT_TYPE::KEYUP, {std::to_string(p->vkCode)} });
+            Instruction* e = new Instruction({ EVENT_TYPE::SCKEYUP, {std::to_string(p->vkCode)} });
             Global::recordBuf.emplace_back(e);
             Global::pressedKeys.erase(p->vkCode);
 
@@ -75,32 +75,32 @@ LRESULT Hook::LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
         {
         case WM_LBUTTONDOWN:
         {
-            Instruction* e = new Instruction({ EVENT_TYPE::LCLICKDOWN, {} });
-            Global::recordBuf.emplace_back(e);
+            /*Instruction* e = new Instruction({ EVENT_TYPE::LCLICKDOWN, {} });
+            Global::recordBuf.emplace_back(e);*/
 
             std::cout << "LBDOWN: " << std::endl;
             break;
         }
         case WM_LBUTTONUP:
         {
-            Instruction* e = new Instruction({ EVENT_TYPE::LCLICKUP, {} });
-            Global::recordBuf.emplace_back(e);
+            /*Instruction* e = new Instruction({ EVENT_TYPE::LCLICKUP, {} });
+            Global::recordBuf.emplace_back(e);*/
 
             std::cout << "LBUP: " << std::endl;
             break;
         }
         case WM_RBUTTONDOWN:
         {
-            Instruction* e = new Instruction({ EVENT_TYPE::RCLICKDOWN, {} });
-            Global::recordBuf.emplace_back(e);
+            /*Instruction* e = new Instruction({ EVENT_TYPE::RCLICKDOWN, {} });
+            Global::recordBuf.emplace_back(e);*/
 
             std::cout << "RBDOWN: " << std::endl;
             break;
         }
         case WM_RBUTTONUP:
         {
-            Instruction* e = new Instruction({ EVENT_TYPE::RCLICKUP, {} });
-            Global::recordBuf.emplace_back(e);
+            /*Instruction* e = new Instruction({ EVENT_TYPE::RCLICKUP, {} });
+            Global::recordBuf.emplace_back(e);*/
 
             std::cout << "RBUP: " << std::endl;
             break;
@@ -108,8 +108,8 @@ LRESULT Hook::LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
         case WM_XBUTTONDOWN:
         {
             DWORD button = pMouseStruct->mouseData >> 16;
-            Instruction* e = new Instruction({ EVENT_TYPE::EXTRACLICKDOWN, {std::to_string(button)} });
-            Global::recordBuf.emplace_back(e);
+            /*Instruction* e = new Instruction({ EVENT_TYPE::EXTRACLICKDOWN, {std::to_string(button)} });
+            Global::recordBuf.emplace_back(e);*/
 
             std::cout << "EXTRADOWN: " << std::endl;
             break;
@@ -117,16 +117,16 @@ LRESULT Hook::LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
         case WM_XBUTTONUP:
         {
             DWORD button = pMouseStruct->mouseData >> 16;
-            Instruction* e = new Instruction({ EVENT_TYPE::EXTRACLICKUP, {std::to_string(button)} });
-            Global::recordBuf.emplace_back(e);
+            /*Instruction* e = new Instruction({ EVENT_TYPE::EXTRACLICKUP, {std::to_string(button)} });
+            Global::recordBuf.emplace_back(e);*/
 
             std::cout << "EXTRAUP: " << std::endl;
             break;
         }
         case WM_MOUSEMOVE:
         {
-            Instruction* e2 = new Instruction({ EVENT_TYPE::MOVE, {std::to_string(pMouseStruct->pt.x), std::to_string(pMouseStruct->pt.y)} });
-            Global::recordBuf.emplace_back(e2);
+            /*Instruction* e2 = new Instruction({ EVENT_TYPE::MOVE, {std::to_string(pMouseStruct->pt.x), std::to_string(pMouseStruct->pt.y)} });
+            Global::recordBuf.emplace_back(e2);*/
             
             break;
         }

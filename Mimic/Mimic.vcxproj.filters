@@ -25,6 +25,9 @@
     <Filter Include="Header Files\time_utils">
       <UniqueIdentifier>{d2016985-be7c-4e1d-8f30-065e3041403e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\json">
+      <UniqueIdentifier>{fad4e05f-beaa-407d-8027-6f659cacaf1e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -66,6 +69,9 @@
     <ClCompile Include="..\dependencies\includes\InputUtilities\InputUtilities.cpp">
       <Filter>Header Files\Input</Filter>
     </ClCompile>
+    <ClCompile Include="..\dependencies\includes\InputUtilities\InputUtilitiesCore.cpp">
+      <Filter>Header Files\Input</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dependencies\includes\imgui\imgui.h">
@@ -92,9 +98,6 @@
     <ClInclude Include="..\dependencies\includes\imgui\imstb_truetype.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\dependencies\includes\InputUtilities\InputUtilities.h">
-      <Filter>Header Files\Input</Filter>
-    </ClInclude>
     <ClInclude Include="GUI.h">
       <Filter>Header Files\GUI</Filter>
     </ClInclude>
@@ -109,6 +112,45 @@
     </ClInclude>
     <ClInclude Include="..\dependencies\includes\time_utils\time_utils.h">
       <Filter>Header Files\time_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\includes\InputUtilities\InputUtilitiesCore.h">
+      <Filter>Header Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\includes\InputUtilities\InputUtilities.h">
+      <Filter>Header Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PC\vcpkg\packages\jsoncpp_x64-windows-static\include\json\forwards.h">
+      <Filter>Header Files\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PC\vcpkg\packages\jsoncpp_x64-windows-static\include\json\json.h">
+      <Filter>Header Files\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PC\vcpkg\packages\jsoncpp_x64-windows-static\include\json\json_features.h">
+      <Filter>Header Files\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PC\vcpkg\packages\jsoncpp_x64-windows-static\include\json\reader.h">
+      <Filter>Header Files\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PC\vcpkg\packages\jsoncpp_x64-windows-static\include\json\value.h">
+      <Filter>Header Files\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PC\vcpkg\packages\jsoncpp_x64-windows-static\include\json\version.h">
+      <Filter>Header Files\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PC\vcpkg\packages\jsoncpp_x64-windows-static\include\json\writer.h">
+      <Filter>Header Files\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PC\vcpkg\packages\jsoncpp_x64-windows-static\include\json\allocator.h">
+      <Filter>Header Files\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PC\vcpkg\packages\jsoncpp_x64-windows-static\include\json\assertions.h">
+      <Filter>Header Files\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\PC\vcpkg\packages\jsoncpp_x64-windows-static\include\json\config.h">
+      <Filter>Header Files\json</Filter>
+    </ClInclude>
+    <ClInclude Include="VK.h">
+      <Filter>Header Files\Input</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

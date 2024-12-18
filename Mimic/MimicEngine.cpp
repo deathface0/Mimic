@@ -11,63 +11,49 @@ MimicEngine::~MimicEngine()
 
 int MimicEngine::readFile(std::string filepath)
 {
-    resetInstructions();
-
     std::ifstream file(filepath);
-    std::string line;
-    std::vector<std::string> args(5);
-
-    if (file.is_open()) {
-        while (getline(file, line)) {
-            std::istringstream iss(line);
-            std::string arg;
-            args.clear();
-
-            while (iss >> arg) {
-                args.push_back(arg);
-            }
-
-            EVENT_TYPE cmd = strToEventType(args.front());
-            args.erase(args.begin());
-
-            if (cmd == EVENT_TYPE::KEYDOWN || cmd == EVENT_TYPE::KEYUP || cmd == EVENT_TYPE::KEY ||
-                cmd == EVENT_TYPE::VKEYDOWN || cmd == EVENT_TYPE::VKEYUP || cmd == EVENT_TYPE::VKEY)
-            {
-                bool upper = std::isupper(args[0].front());
-                WORD vkCode = VkKeyScanEx(args[0].front(), GetKeyboardLayout(0));
-                if (vkCode == -1)
-                {
-                    // Character cannot be mapped to a virtual key code
-                    std::cout << "ERROR MAPPING KEY!!" << std::endl;
-                    return -1;
-                }
-                args[0] = std::to_string(static_cast<UCHAR>(vkCode & 0xFF));
-                if (args.size() == 1)
-                {
-                    args.push_back("0");
-                    args.push_back(std::to_string(upper));
-                }
-                else if (args.size() == 2)
-                {
-                    args.push_back(std::to_string(upper));
-                }
-            }
-
-            //Check syntax error
-
-            Instruction* instruction = new Instruction(cmd, args);
-            this->m_instructions.push_back(instruction);
-        }
-
-        file.close();
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file." << std::endl;
+        return 1;
     }
-    else {
-        std::cout << "No se pudo abrir el archivo." << std::endl;
+
+    // Read file
+    std::ostringstream buffer;
+    buffer << file.rdbuf();
+    std::string jsonString = buffer.str();
+
+    // Parse the JSON string
+    Json::CharReaderBuilder readerBuilder;
+    Json::Value root;
+    std::string errs;
+
+    std::istringstream s(jsonString);
+    if (!Json::parseFromStream(readerBuilder, s, &root, &errs)) {
+        std::cerr << "Error parsing JSON: " << errs << std::endl;
         return -1;
     }
 
-    return 1;
+    const Json::Value commands = root["commands"];
+    if (!commands.isArray()) {
+        std::cerr << "Error: 'commands' is not an array." << std::endl;
+        return -1;
+    }
+
+    for (const auto& command : commands) {
+        const Json::Value args = command["args"];
+        if (!args.isObject()) {
+            std::cerr << "Error: 'args' is not an object." << std::endl;
+            return -1;
+        }
+
+        std::string type = command["type"].asString();
+        EVENT_TYPE cmd = strToEventType(type);
+
+        Instruction* instruction = new Instruction(cmd, args);
+        this->m_instructions.push_back(instruction);        
+    }
 }
+
 
 void MimicEngine::importRecordBuf()
 {
@@ -102,17 +88,26 @@ EVENT_TYPE MimicEngine::strToEventType(std::string cmd)
     else if (cmd == "EXTRACLICKDOWN") return EVENT_TYPE::EXTRACLICKDOWN;
     else if (cmd == "EXTRACLICKUP") return EVENT_TYPE::EXTRACLICKUP;
     else if (cmd == "EXTRACLICK") return EVENT_TYPE::EXTRACLICK;
-    else if (cmd == "KEYDOWN") return EVENT_TYPE::KEYDOWN;
-    else if (cmd == "KEYUP") return EVENT_TYPE::KEYUP;
-    else if (cmd == "KEY") return EVENT_TYPE::KEY;
+    else if (cmd == "SCKEYDOWN") return EVENT_TYPE::SCKEYDOWN;
+    else if (cmd == "SCKEYUP") return EVENT_TYPE::SCKEYUP;
+    else if (cmd == "SCKEY") return EVENT_TYPE::SCKEY;
     else if (cmd == "VKEYDOWN") return EVENT_TYPE::VKEYDOWN;
     else if (cmd == "VKEYUP") return EVENT_TYPE::VKEYUP;
     else if (cmd == "VKEY") return EVENT_TYPE::VKEY;
-    else if (cmd == "MULTIKEYPRESSDOWN") return EVENT_TYPE::MULTIKEYPRESSDOWN;
-    else if (cmd == "MULTIKEYPRESSUP") return EVENT_TYPE::MULTIKEYPRESSUP;
-    else if (cmd == "MULTIKEYPRESS") return EVENT_TYPE::MULTIKEYPRESS;
+    else if (cmd == "UCKEYDOWN") return EVENT_TYPE::UCKEYDOWN;
+    else if (cmd == "UCKEYUP") return EVENT_TYPE::UCKEYUP;
+    else if (cmd == "UCKEY") return EVENT_TYPE::UCKEY;
+    else if (cmd == "MULTIVKDOWN") return EVENT_TYPE::MULTIVKDOWN;
+    else if (cmd == "MULTIVKUP") return EVENT_TYPE::MULTIVKUP;
+    else if (cmd == "MULTIVK") return EVENT_TYPE::MULTIVK;
+    else if (cmd == "MULTISCDOWN") return EVENT_TYPE::MULTISCDOWN;
+    else if (cmd == "MULTISCUP") return EVENT_TYPE::MULTISCUP;
+    else if (cmd == "MULTISC") return EVENT_TYPE::MULTISC;
+    else if (cmd == "MULTIUCDOWN") return EVENT_TYPE::MULTIUCDOWN;
+    else if (cmd == "MULTIUCUP") return EVENT_TYPE::MULTIUCUP;
+    else if (cmd == "MULTIUC") return EVENT_TYPE::MULTIUC;
     else if (cmd == "VKTYPESTRING") return EVENT_TYPE::VKTYPESTRING;
-    else if (cmd == "TYPESTRING") return EVENT_TYPE::TYPESTRING;
+    else if (cmd == "SCTYPESTRING") return EVENT_TYPE::SCTYPESTRING;
 
     return EVENT_TYPE::NONE;
 }
@@ -127,24 +122,36 @@ int MimicEngine::processCmd(Instruction* instruction)
     switch (instruction->cmd) {
     case EVENT_TYPE::SLEEP:
     {
-        time_t ms_sleep = stoi(instruction->args[0]);
-        std::this_thread::sleep_for(std::chrono::milliseconds(ms_sleep));
-        
-        break;
+        if (instruction->args.isMember("ms") && instruction->args["ms"].isInt64()) {
+            time_t ms_sleep = instruction->args["ms"].asInt64();
+            std::this_thread::sleep_for(std::chrono::milliseconds(ms_sleep));
+            return 1;
+        }
+
+        return -1;
     }
     case EVENT_TYPE::NSSLEEP:
     {
-        size_t ns_sleep = stoul(instruction->args[0]);
-        auto astart = std::chrono::steady_clock::now();
-        auto target = astart + std::chrono::nanoseconds(ns_sleep);
-        while (std::chrono::steady_clock::now() < target) {} // Busy-wait loop
+        if (instruction->args.isMember("ns") && instruction->args["ns"].isInt64()) {
+            time_t ns_sleep = instruction->args["ns"].asInt64();
+            auto astart = std::chrono::steady_clock::now();
+            auto target = astart + std::chrono::nanoseconds(ns_sleep);
+            while (std::chrono::steady_clock::now() < target) {} // Busy-wait loop
+            return 1;
+        }
 
-        break;
+        return -1;
     }
     case EVENT_TYPE::MOVE:
     {
-        int x = stoi(instruction->args[0]), y = stoi(instruction->args[1]);
-        return inputUtils.SetCursorPos(x, y);
+        if (instruction->args.isMember("x") && instruction->args.isMember("y") &&
+            instruction->args["x"].isInt() && instruction->args["y"].isInt()) {
+            int x = instruction->args["x"].asInt();
+            int y = instruction->args["y"].asInt();
+            return inputUtils.SetCursorPos(x, y);
+        }
+
+        return -1;
     }
     case EVENT_TYPE::LCLICKDOWN:
     {
@@ -156,8 +163,12 @@ int MimicEngine::processCmd(Instruction* instruction)
     }
     case EVENT_TYPE::LCLICK:
     {
-        time_t ms_hold = instruction->args.empty() ? 0 : stoi(instruction->args[0]);
-        return inputUtils.leftClick(ms_hold);
+        if (instruction->args.isMember("ms") && instruction->args["ms"].isInt64()) {
+            time_t ms_hold = instruction->args["ms"].asInt64();
+            return inputUtils.leftClick(ms_hold);
+        }
+        
+        return -1;
     }
     case EVENT_TYPE::RCLICKDOWN:
     {
@@ -169,8 +180,12 @@ int MimicEngine::processCmd(Instruction* instruction)
     }
     case EVENT_TYPE::RCLICK:
     {
-        time_t ms_hold = instruction->args.empty() ? 0 : stoi(instruction->args[0]);
-        return inputUtils.rightClick(ms_hold);
+        if (instruction->args.isMember("ms") && instruction->args["ms"].isInt64()) {
+            time_t ms_hold = instruction->args["ms"].asInt64();
+            return inputUtils.rightClick(ms_hold);
+        }
+
+        return -1;
     }
     case EVENT_TYPE::MCLICKDOWN:
     {
@@ -182,89 +197,321 @@ int MimicEngine::processCmd(Instruction* instruction)
     }
     case EVENT_TYPE::MCLICK:
     {
-        time_t ms_hold = instruction->args.empty() ? 0 : stoi(instruction->args[0]);
-        return inputUtils.middleClick(ms_hold);
+        if (instruction->args.isMember("ms") && instruction->args["ms"].isInt64()) {
+            time_t ms_hold = instruction->args["ms"].asInt64();
+            return inputUtils.middleClick(ms_hold);
+        }
+
+        return -1;
     }
     case EVENT_TYPE::MWHEELDOWN:
     {
-        int scroll_num = stoi(instruction->args[0]);
-        return inputUtils.MouseWheelRoll(scroll_num, DOWN);
+        if (instruction->args.isMember("scroll_num") && instruction->args["scroll_num"].isInt()) {
+            int scroll_num = instruction->args["scroll_num"].asInt();
+            return inputUtils.MouseWheelRoll(scroll_num, DOWN);
+        }
+
+        return -1;
     }
     case EVENT_TYPE::MWHEELUP:
     {
-        int scroll_num = stoi(instruction->args[0]);
-        return inputUtils.MouseWheelRoll(scroll_num, UP);
+        if (instruction->args.isMember("scroll_num") && instruction->args["scroll_num"].isInt()) {
+            int scroll_num = instruction->args["scroll_num"].asInt();
+            return inputUtils.MouseWheelRoll(scroll_num, UP);
+        }
+
+        return -1;
     }
     case EVENT_TYPE::EXTRACLICKDOWN:
     {
-        int button = stoi(instruction->args[0]);
-        return inputUtils.ExtraClickDown(button);
+        if (instruction->args.isMember("id") && instruction->args["id"].isInt()) {
+            int button = instruction->args["id"].asInt();
+            return inputUtils.ExtraClickDown(button);
+        }
+
+        return -1;
     }
     case EVENT_TYPE::EXTRACLICKUP:
     {
-        int button = stoi(instruction->args[0]);
-        return inputUtils.ExtraClickUp(button);
+        if (instruction->args.isMember("id") && instruction->args["id"].isInt()) {
+            int button = instruction->args["id"].asInt();
+            return inputUtils.ExtraClickUp(button);
+        }
+
+        return -1;
     }
     case EVENT_TYPE::EXTRACLICK:
     {
-        time_t ms_hold = instruction->args.empty() ? 0 : stoi(instruction->args[0]);
-        return inputUtils.extraClick(ms_hold);
+        if (instruction->args.isMember("id") && instruction->args.isMember("ms") &&
+            instruction->args["id"].isInt() && instruction->args["ms"].isInt64()) {
+            int button = instruction->args["id"].asInt();
+            time_t ms_hold = instruction->args["ms"].asInt64();
+            return inputUtils.extraClick(button, ms_hold);
+        }
+
+        return -1;
     }
     case EVENT_TYPE::VKEYDOWN:
     {
-        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
-        return inputUtils.vkKeyDown(vk_code, stoi(instruction->args[2]));
+        if (instruction->args.isMember("key")) {
+            WORD vk_code = static_cast<WORD>(instruction->args["key"].asString().front());
+            return inputUtils.vKeyDown(vk_code);
+        }
+
+        return -1;
     }
     case EVENT_TYPE::VKEYUP:
     {
-        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
-        return inputUtils.vkKeyUp(vk_code);
+        if (instruction->args.isMember("key")) {
+            WORD vk_code = static_cast<WORD>(instruction->args["key"].asString().front());
+            return inputUtils.vKeyUp(vk_code);
+        }
+        
+        return -1;
     }
     case EVENT_TYPE::VKEY:
     {
-        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
-        time_t ms_hold = std::stoul(instruction->args[1], nullptr, 0);
-        return inputUtils.vkKey(vk_code, stoi(instruction->args[2]), ms_hold);
+        if (instruction->args.isMember("key") && instruction->args.isMember("ms")
+            && instruction->args["ms"].isInt64()) {
+            std::string vk_str = instruction->args["key"].asString();
+            auto it = vk_map.find(vk_str);
+            WORD vk_code = it != vk_map.end() ? it->second : static_cast<WORD>(vk_str.front());
+            time_t ms_hold = instruction->args["ms"].asInt64();
+            return inputUtils.vKey(vk_code, ms_hold);
+        }
+
+        return -1;
     }
-    case EVENT_TYPE::KEYDOWN:
+    case EVENT_TYPE::SCKEYDOWN:
     {
-        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
-        return inputUtils.KeyDown(vk_code, stoi(instruction->args[2]));
+        if (instruction->args.isMember("key")) {
+            std::string key = instruction->args["key"].asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            return inputUtils.scKeyDown(wkey.front());
+        }
+
+        return -1;
     }
-    case EVENT_TYPE::KEYUP:
+    case EVENT_TYPE::SCKEYUP:
     {
-        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
-        return inputUtils.KeyUp(vk_code);
+        if (instruction->args.isMember("key")) {
+            std::string key = instruction->args["key"].asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            return inputUtils.scKeyUp(wkey.front());
+        }
+
+        return -1;
     }
-    case EVENT_TYPE::KEY:
+    case EVENT_TYPE::SCKEY:
     {
-        DWORD vk_code = static_cast<DWORD>(std::stoul(instruction->args[0], nullptr, 0));
-        time_t ms_hold = std::stoul(instruction->args[1], nullptr, 0);
-        return inputUtils.directKey(vk_code, stoi(instruction->args[2]), ms_hold);
+        if (instruction->args.isMember("key") && instruction->args.isMember("ms")
+            && instruction->args["ms"].isInt64()) {
+            std::string key = instruction->args["key"].asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            time_t ms_hold = instruction->args["ms"].asInt64();
+            return inputUtils.scKey(wkey.front(), ms_hold);
+        }
+
+        return -1;
     }
-    case EVENT_TYPE::MULTIKEYPRESSDOWN:
+    case EVENT_TYPE::UCKEYDOWN:
     {
-        break;
+        if (instruction->args.isMember("key")) {
+            std::string key = instruction->args["key"].asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            return inputUtils.unicodeKeyDown(wkey.front());
+        }
+
+        return -1;
     }
-    case EVENT_TYPE::MULTIKEYPRESSUP:
+    case EVENT_TYPE::UCKEYUP:
     {
-        break;
+        if (instruction->args.isMember("key")) {
+            std::string key = instruction->args["key"].asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            return inputUtils.unicodeKeyUp(wkey.front());
+        }
+
+        return -1;
     }
-    case EVENT_TYPE::MULTIKEYPRESS:
+    case EVENT_TYPE::UCKEY:
     {
-        break;
+        if (instruction->args.isMember("key") && instruction->args.isMember("ms")
+            && instruction->args["ms"].isInt64()) {
+            std::string key = instruction->args["key"].asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            time_t ms_hold = instruction->args["ms"].asInt64();
+            return inputUtils.unicodeKey(wkey.front(), ms_hold);
+        }
+
+        return -1;
+    }
+    case EVENT_TYPE::MULTIVKDOWN:
+    {
+        std::vector<WORD> vkCodes;
+
+        if (!instruction->args.isMember("keys") || !instruction->args["keys"].isArray())
+            return -1;
+
+        for (const auto vk : instruction->args["keys"]) {
+            std::string vk_str = vk.asString();
+            auto it = vk_map.find(vk_str);
+            WORD vk_code = it != vk_map.end() ? it->second : static_cast<WORD>(vk.asString().front());
+
+            vkCodes.push_back(vk_code);
+        }
+
+        return inputUtils.vkMultiKeyDown(vkCodes);
+    }
+    case EVENT_TYPE::MULTIVKUP:
+    {
+        std::vector<WORD> vkCodes;
+
+        if (!instruction->args.isMember("keys") || !instruction->args["keys"].isArray())
+            return -1;
+
+        for (const auto vk : instruction->args["keys"]) {
+            std::string vk_str = vk.asString();
+            auto it = vk_map.find(vk_str);
+            WORD vk_code = it != vk_map.end() ? it->second : static_cast<WORD>(vk.asString().front());
+
+            vkCodes.push_back(vk_code);
+        }
+
+        return inputUtils.vkMultiKeyUp(vkCodes);
+    }
+    case EVENT_TYPE::MULTIVK:
+    {
+        std::vector<WORD> vkCodes;
+
+        if (!instruction->args.isMember("keys") || !instruction->args.isMember("ms") || !instruction->args["keys"].isArray() || !instruction->args["ms"].isInt64())
+            return -1;
+
+        time_t ms_sleep = instruction->args["ms"].asInt64();
+
+        for (const auto vk : instruction->args["keys"]) {
+            std::string vk_str = vk.asString();
+            auto it = vk_map.find(vk_str);
+            WORD vk_code = it != vk_map.end() ? it->second : static_cast<WORD>(vk_str.front());
+
+            vkCodes.push_back(vk_code);
+        }
+
+        return inputUtils.vkMultiKey(vkCodes, ms_sleep);
+    }
+    case EVENT_TYPE::MULTISCDOWN:
+    {
+        std::vector<wchar_t> keys;
+
+        if (!instruction->args.isMember("keys") || !instruction->args["keys"].isArray())
+            return -1;
+
+        for (const auto vk : instruction->args["keys"]) {
+            std::string key = vk.asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            keys.push_back(wkey.front());
+        }
+
+        return inputUtils.scMultiKeyDown(keys);
+    }
+    case EVENT_TYPE::MULTISCUP:
+    {
+        std::vector<wchar_t> keys;
+
+        if (!instruction->args.isMember("keys") || !instruction->args["keys"].isArray())
+            return -1;
+
+        for (const auto vk : instruction->args["keys"]) {
+            std::string key = vk.asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            keys.push_back(wkey.front());
+        }
+
+        return inputUtils.scMultiKeyUp(keys);
+    }
+    case EVENT_TYPE::MULTISC:
+    {
+        std::vector<wchar_t> keys;
+
+        if (!instruction->args.isMember("keys") || !instruction->args.isMember("ms") || !instruction->args["keys"].isArray() || !instruction->args["ms"].isInt64())
+            return -1;
+
+        time_t ms_sleep = instruction->args["ms"].asInt64();
+
+        for (const auto vk : instruction->args["keys"]) {
+            std::string key = vk.asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            keys.push_back(wkey.front());
+        }
+        
+        return inputUtils.scMultiKey(keys, ms_sleep);
+    }
+    case EVENT_TYPE::MULTIUCDOWN:
+    {
+        std::vector<wchar_t> keys;
+
+        if (!instruction->args.isMember("keys") || !instruction->args["keys"].isArray())
+            return -1;
+
+        for (const auto vk : instruction->args["keys"]) {
+            std::string key = vk.asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            keys.push_back(wkey.front());
+        }
+
+        return inputUtils.unicodeMultiKeyDown(keys);
+    }
+    case EVENT_TYPE::MULTIUCUP:
+    {
+        std::vector<wchar_t> keys;
+
+        if (!instruction->args.isMember("keys") || !instruction->args["keys"].isArray())
+            return -1;
+
+        for (const auto vk : instruction->args["keys"]) {
+            std::string key = vk.asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            keys.push_back(wkey.front());
+        }
+
+        return inputUtils.unicodeMultiKeyUp(keys);
+    }
+    case EVENT_TYPE::MULTIUC:
+    {
+        std::vector<wchar_t> keys;
+
+        if (!instruction->args.isMember("keys") || !instruction->args.isMember("ms") || !instruction->args["keys"].isArray() || !instruction->args["ms"].isInt64())
+            return -1;
+
+        time_t ms_sleep = instruction->args["ms"].asInt64();
+
+        for (const auto vk : instruction->args["keys"]) {
+            std::string key = vk.asString();
+            std::wstring wkey = inputUtils.get_utf16(key);
+            keys.push_back(wkey.front());
+        }
+
+        return inputUtils.unicodeMultiKey(keys, ms_sleep);
     }
     case EVENT_TYPE::VKTYPESTRING:
     {
-        std::string str = instruction->args[0];
-        inputUtils.vkTypeString(str);
-        return 1;
+        if (instruction->args.isMember("str") && instruction->args["str"].isString()) {
+            std::string str = instruction->args["str"].asString();
+            std::wstring wstr = inputUtils.get_utf16(str);
+            return inputUtils.typeStr(wstr);
+        }
+
+        return -1;
     }
-    case EVENT_TYPE::TYPESTRING:
+    case EVENT_TYPE::SCTYPESTRING:
     {
-        std::string str = instruction->args[0];
-        inputUtils.directTypeString(str);
-        return 1;
+        if (instruction->args.isMember("str") && instruction->args["str"].isString()) {
+            std::string str = instruction->args["str"].asString();
+            std::wstring wstr = inputUtils.get_utf16(str);
+            return inputUtils.scTypeStr(wstr);
+        }
+
+        return -1;
     }
     default:
         break;
@@ -285,7 +532,7 @@ void MimicEngine::run()
             std::cout << arg << ", ";
         }
         std::cout << "" << std::endl;*/
-        processCmd(instruction);
+        std::cout << instruction->cmd << " -- " << processCmd(instruction) << std::endl;
     }
     counter /= 2;
     std::cout << "COUNT: " << counter << std::endl;

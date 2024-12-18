@@ -1,72 +1,44 @@
 #pragma once
 
-#include <Windows.h>
-#include <stdexcept>
-#include <unordered_map>
-#include <string>
-#include <iostream>
-
-#define UP    1
-#define DOWN -1
-
-#define MOUSE4 0x0001
-#define MOUSE5 0x0002
-#define MOUSE6 0x0003
-#define MOUSE7 0x0004
-#define MOUSE8 0x0005
-
-#define MOUSEEVENTF_LEFTDOWN    0x0002 /* left button down */
-#define MOUSEEVENTF_LEFTUP      0x0004 /* left button up */
-#define MOUSEEVENTF_RIGHTDOWN   0x0008 /* right button down */
-#define MOUSEEVENTF_RIGHTUP     0x0010 /* right button up */
-#define MOUSEEVENTF_MIDDLEDOWN  0x0020 /* middle button down */
-#define MOUSEEVENTF_MIDDLEUP    0x0040 /* middle button up */
-
-struct Event
-{
-	WORD mouse = -1;
-	WORD vk = -1;
-	char key = -1;
-};
-
-class InputUtilitiesCore
-{
-public:
-	~InputUtilitiesCore();
-
-	bool SetCursorPos(int x, int y);
-	bool MouseEvent(WORD m_event);
-	bool ExtraClickDown(int button);
-	bool ExtraClickUp(int button);
-	bool MouseWheelRoll(int scrolls, int delta);
-
-	bool vkKeyDown(WORD vkCode, bool upper);
-	bool vkKeyUp(WORD vkCode);
-	//bool KeyDown(char key); 
-	bool KeyDown(DWORD key, bool upper);
-	//bool KeyUp(char key); 
-	bool KeyUp(DWORD key);
-	bool vkMultiKeyDown(const std::vector<WORD>& vkCodes);
-	bool vkMultiKeyUp(const std::vector<WORD>& vkCodes);
-
-	void reset();
-
-private:
-	std::unordered_map<std::string, Event> runningInputs;
-};
+#include "InputUtilitiesCore.h"
 
 class InputUtilities : public InputUtilitiesCore
 {
 public:
-	bool leftClick(time_t ms_hold = 0);
-	bool rightClick(time_t ms_hold = 0);
-	bool middleClick(time_t ms_hold = 0);
-	bool extraClick(int button, time_t ms_hold = 0);
+	InputUtilities(bool safemode = false)
+		: InputUtilitiesCore(safemode) {};
 
-	bool vkKey(WORD vkCode, bool upper, time_t ms_hold = 0);
-	//bool directKey(char key, bool upper, time_t ms_hold = 0);
-	bool directKey(DWORD key, bool upper, time_t ms_hold = 0);
-	bool vkMultiKey(const std::vector<WORD>& vkCodes, time_t ms_hold = 0);
-	void vkTypeString(std::string str);
-	void directTypeString(std::string str);
+	bool leftClick(time_t pressed_ms = 0);
+	bool rightClick(time_t pressed_ms = 0);
+	bool middleClick(time_t pressed_ms = 0);
+	bool extraClick(UINT button, time_t pressed_ms = 0);
+
+	bool vKey(WORD vkCode, time_t pressed_ms = 0);
+	bool unicodeKey(wchar_t key, time_t pressed_ms = 0);
+	bool scKey(wchar_t key, time_t pressed_ms = 0);
+	bool Key(Event e, time_t pressed_ms = 0);
+	bool vkMultiKey(const std::vector<WORD>& vkCodes, time_t pressed_ms = 0);
+	bool unicodeMultiKey(const std::vector<wchar_t>& keys, time_t pressed_ms = 0);
+	bool scMultiKey(const std::vector<wchar_t>& keys, time_t pressed_ms = 0);
+
+	bool typeStr(const std::wstring& str);
+	bool scTypeStr(const std::wstring& str);
+
+	std::string get_utf8(const std::wstring& wstr)
+	{
+		if (wstr.empty()) return std::string();
+		int sz = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), 0, 0, 0, 0);
+		std::string res(sz, 0);
+		WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &res[0], sz, 0, 0);
+		return res;
+	}
+
+	std::wstring get_utf16(const std::string& str)
+	{
+		if (str.empty()) return std::wstring();
+		int sz = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), 0, 0);
+		std::wstring res(sz, 0);
+		MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &res[0], sz);
+		return res;
+	}
 };
