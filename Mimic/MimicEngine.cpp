@@ -64,7 +64,6 @@ void MimicEngine::importRecordBuf()
         Instruction* newInstruction = new Instruction(*instruction);
         this->m_instructions.push_back(newInstruction);
     }
-    this->m_instructions = Global::recordBuf;
 
     Global::recordBuf.clear();
 }
@@ -102,9 +101,9 @@ int MimicEngine::processCmd(Instruction* instruction)
     {
         if (instruction->args.isMember("ns") && instruction->args["ns"].isInt64()) {
             time_t ns_sleep = instruction->args["ns"].asInt64();
-            auto astart = std::chrono::steady_clock::now();
-            auto target = astart + std::chrono::nanoseconds(ns_sleep);
-            while (std::chrono::steady_clock::now() < target) {} // Busy-wait loop
+            std::chrono::high_resolution_clock::time_point astart = std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::time_point target = astart + std::chrono::nanoseconds(ns_sleep);
+            while (std::chrono::high_resolution_clock::now() <= target) {} // Busy-wait loop
             return 1;
         }
 
@@ -222,7 +221,9 @@ int MimicEngine::processCmd(Instruction* instruction)
     case EVENT_TYPE::VKEYDOWN:
     {
         if (instruction->args.isMember("key")) {
-            WORD vk_code = static_cast<WORD>(instruction->args["key"].asString().front());
+            std::string vk_str = instruction->args["key"].asString();
+            auto it = vk_map.find(vk_str);
+            WORD vk_code = it != vk_map.end() ? it->second : static_cast<WORD>(vk_str.front());
             return inputUtils.vKeyDown(vk_code);
         }
 
@@ -231,7 +232,9 @@ int MimicEngine::processCmd(Instruction* instruction)
     case EVENT_TYPE::VKEYUP:
     {
         if (instruction->args.isMember("key")) {
-            WORD vk_code = static_cast<WORD>(instruction->args["key"].asString().front());
+            std::string vk_str = instruction->args["key"].asString();
+            auto it = vk_map.find(vk_str);
+            WORD vk_code = it != vk_map.end() ? it->second : static_cast<WORD>(vk_str.front());
             return inputUtils.vKeyUp(vk_code);
         }
         
@@ -491,15 +494,9 @@ int MimicEngine::processCmd(Instruction* instruction)
 void MimicEngine::run()
 {
     int counter = 0;
-    for (const auto instruction : m_instructions)
+    for (auto instruction : m_instructions)
     {
         counter++;
-        /*std::cout << instruction->cmd << " - ";
-        for (const auto arg : instruction->args)
-        {
-            std::cout << arg << ", ";
-        }
-        std::cout << "" << std::endl;*/
         std::cout << instruction->cmd << " -- " << processCmd(instruction) << std::endl;
     }
     counter /= 2;

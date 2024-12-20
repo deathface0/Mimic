@@ -31,7 +31,6 @@ private:
 
 private:
 	std::vector<Instruction*> m_instructions;
-
 	InputUtilities inputUtils;
 };
 

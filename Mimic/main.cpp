@@ -59,31 +59,28 @@ int main()
 
 int main()
 {
-	Sleep(2000);
-	
 	Hook hook;
-	/*Global::recording = true;
 
-	while (true)
+	/*while (true)
 	{
 		Sleep(10);
-	}
-	Sleep(1000);*/
-	/*std::cout << "RECORDING..." << std::endl;
+	}*/
+	Sleep(1000);
+	std::cout << "RECORDING..." << std::endl;
 	Global::recording = true;
 
 	Hook::lastEventTimestamp = std::chrono::high_resolution_clock::now();
 
-	Sleep(5000);
+	Sleep(10000);
 	std::cout << "RECORDING END" << std::endl;
 	Global::recording = false;
 
-	Sleep(1000);*/
+	Sleep(1000);
 
 	MimicEngine m;
-	m.readFile("C:\\Users\\Deathface\\Desktop\\commands.json");
+	/*m.readFile("C:\\Users\\Deathface\\Desktop\\commands.json");*/
 
-	//m.importRecordBuf();
+	m.importRecordBuf();
 
 	auto start = std::chrono::high_resolution_clock::now();
 	m.run();

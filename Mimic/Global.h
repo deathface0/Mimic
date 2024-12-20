@@ -6,7 +6,9 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <variant>
+#include <fmt/format.h>
 #include "json/json.h"
+#include "VK.h"
 
 typedef std::basic_string<TCHAR> tstring;
 

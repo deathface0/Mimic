@@ -21,5 +21,5 @@ private:
 	void MsgLoop();
 
 public:
-	static std::chrono::steady_clock::time_point lastEventTimestamp;
+	static std::chrono::high_resolution_clock::time_point lastEventTimestamp;
 };
