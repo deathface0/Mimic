@@ -2,11 +2,7 @@
 
 MimicEngine::~MimicEngine()
 {
-    for (const auto instruction : m_instructions)
-        delete instruction;
-
-    for (const auto instruction : Global::recordBuf)
-        delete instruction;
+    clearInstructions();
 }
 
 int MimicEngine::readFile(std::string filepath)
@@ -54,18 +50,51 @@ int MimicEngine::readFile(std::string filepath)
     }
 }
 
-
-void MimicEngine::importRecordBuf()
+void MimicEngine::clearInstructions()
 {
-    resetInstructions();
+    for (const auto instruction : m_instructions)
+        delete instruction;
 
-    for (const auto instruction : Global::recordBuf)
-    {
-        Instruction* newInstruction = new Instruction(*instruction);
-        this->m_instructions.push_back(newInstruction);
+    m_instructions.clear();
+}
+
+int MimicEngine::exportBuffer(std::string filepath)
+{
+    if (Global::recordedJson["commands"].empty())
+        return -1;
+
+    Json::StreamWriterBuilder writerBuilder;
+    writerBuilder["indentation"] = "    ";
+    std::string prettyJson = Json::writeString(writerBuilder, Global::recordedJson);
+
+    std::ofstream outFile(filepath);
+    if (outFile.is_open()) {
+        outFile << prettyJson;
+        outFile.close();
+        std::cout << "JSON saved succesfully" << std::endl;
+        return 1;
     }
+    else {
+        std::cerr << "Failed to open file for writing." << std::endl;
+        return -1;
+    }
+}
 
-    Global::recordBuf.clear();
+void MimicEngine::record_start()
+{
+    Global::recording = true;
+
+    Hook::lastEventTimestamp = std::chrono::high_resolution_clock::now();
+
+    Global::recordedJson.clear();
+    Global::recordedJson["commands"] = Json::arrayValue;
+}
+
+int MimicEngine::record_stop()
+{
+    Global::recording = false;
+
+    return Global::recordedJson["commands"].size();
 }
 
 EVENT_TYPE MimicEngine::strToEventType(std::string cmd)
@@ -77,11 +106,6 @@ EVENT_TYPE MimicEngine::strToEventType(std::string cmd)
         return it->second;
 
     return EVENT_TYPE::NONE;
-}
-
-void MimicEngine::resetInstructions()
-{
-    m_instructions.clear();
 }
 
 int MimicEngine::processCmd(Instruction* instruction)
@@ -493,12 +517,9 @@ int MimicEngine::processCmd(Instruction* instruction)
 
 void MimicEngine::run()
 {
-    int counter = 0;
     for (auto instruction : m_instructions)
     {
-        counter++;
-        std::cout << instruction->cmd << " -- " << processCmd(instruction) << std::endl;
+        /*std::cout << instruction->cmd << " -- " << processCmd(instruction) << std::endl;*/
+        processCmd(instruction);
     }
-    counter /= 2;
-    std::cout << "COUNT: " << counter << std::endl;
 }

@@ -12,6 +12,7 @@
 #include "InputUtilities/InputUtilities.h"
 #include "VK.h"
 #include "Global.h"
+#include "Hook.h"
 
 class MimicEngine
 {
@@ -19,15 +20,17 @@ public:
 	~MimicEngine();
 
 	int readFile(std::string filepath);
-	void importRecordBuf();
+	void clearInstructions();
+	int exportBuffer(std::string filepath);
+
+	void record_start();
+	int record_stop();
+	
 	void run();
 
 private:
 	EVENT_TYPE strToEventType(std::string cmd);
-	void resetInstructions();
-
 	int processCmd(Instruction* instruction);
-
 
 private:
 	std::vector<Instruction*> m_instructions;

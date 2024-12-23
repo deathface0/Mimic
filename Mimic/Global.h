@@ -59,7 +59,7 @@ namespace Global
 {
 	inline bool recording = false;
 
-	inline std::vector<Instruction*> recordBuf;
+    inline Json::Value recordedJson;
 	inline std::unordered_set<WORD> pressedKeys;
 
     inline const std::unordered_map<std::string, EVENT_TYPE> cmdMap = {
